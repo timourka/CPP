@@ -13,11 +13,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
+      - name: Check if .NET project exists
+        id: check_project
+        run: |
+          if ls **/*.sln 1> /dev/null 2>&1 || ls **/*.csproj 1> /dev/null 2>&1; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Restore dependencies
+        if: steps.check_project.outputs.found == 'true'
         run: dotnet restore
-      - name: Run build and code analysis
+
+      - name: Build and analyze
+        if: steps.check_project.outputs.found == 'true'
         run: dotnet build --configuration Release /warnaserror
+
+      - name: Skip message
+        if: steps.check_project.outputs.found == 'false'
+        run: echo "⚠️ No .NET project found, skipping build and analysis."
