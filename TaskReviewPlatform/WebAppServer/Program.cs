@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Repository.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,8 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+// Добавляем DbContext с PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+// Добавляем Identity
+builder.Services.AddDefaultIdentity<IdentityUser>()
+    .AddEntityFrameworkStores<AppDbContext>();
 
 var app = builder.Build();
 
@@ -24,6 +30,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Используем аутентификацию и авторизацию
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();

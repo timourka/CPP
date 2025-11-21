@@ -19,7 +19,17 @@ namespace Repository.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Можно добавить связи, ограничения, конфига и т.п.
+            // Course <-> User (Avtors)
+            modelBuilder.Entity<Course>()
+                .HasMany(c => c.Avtors)
+                .WithMany()
+                .UsingEntity(j => j.ToTable("CourseAvtors"));
+
+            // Course <-> User (Participants)
+            modelBuilder.Entity<Course>()
+                .HasMany(c => c.Participants)
+                .WithMany()
+                .UsingEntity(j => j.ToTable("CourseParticipants"));
         }
     }
 }
