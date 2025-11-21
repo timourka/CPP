@@ -1,0 +1,66 @@
+﻿@page
+@model WebAppServer.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "Пользователи";
+}
+
+<h2>Список пользователей</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Login</th>
+            <th>Имя</th>
+            <th>Пароль</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.Login</td>
+                <td>@user.Name</td>
+                <td>@user.Password</td>
+                <td>
+                    <form method="get" asp-page-handler="" class="d-inline">
+                        <input type="hidden" name="EditId" value="@user.Id" />
+                        <button class="btn btn-sm btn-warning">Редактировать</button>
+                    </form>
+
+                    <form method="post" asp-page-handler="Delete" class="d-inline">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить пользователя?');">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<h3>@(Model.InputUser.Id == 0 ? "Создать нового пользователя" : "Редактировать пользователя")</h3>
+
+<form method="post">
+    <input type="hidden" asp-for="InputUser.Id" />
+
+    <div class="mb-3">
+        <label class="form-label">Login</label>
+        <input asp-for="InputUser.Login" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Имя</label>
+        <input asp-for="InputUser.Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Пароль</label>
+        <input asp-for="InputUser.Password" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">@((Model.InputUser.Id == 0) ? "Создать" : "Сохранить")</button>
+</form>

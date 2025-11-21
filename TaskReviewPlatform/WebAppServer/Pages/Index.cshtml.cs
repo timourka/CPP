@@ -1,8 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-public class IndexModel : PageModel
+namespace WebAppServer.Pages
 {
-    public void OnGet()
+    [Authorize]
+    public class IndexModel : PageModel
     {
+        public void OnGet()
+        {
+        }
     }
 }

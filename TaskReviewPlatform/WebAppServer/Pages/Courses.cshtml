@@ -1,0 +1,80 @@
+﻿@page
+@model WebAppServer.Pages.CoursesModel
+@{
+    ViewData["Title"] = "Мои курсы";
+}
+
+<h2 class="mb-3">Мои курсы</h2>
+
+<div class="row">
+
+    <!-- Блок 1: Курсы где автор -->
+    <div class="col-md-6">
+        <h4>📘 Я автор</h4>
+
+        @if (Model.AuthorCourses.Count == 0)
+        {
+            <p class="text-muted">Вы еще не создали ни одного курса.</p>
+        }
+        else
+        {
+            <ul class="list-group mb-3">
+                @foreach (var c in Model.AuthorCourses)
+                {
+                    <li class="list-group-item">
+                        <a asp-page="/Courses/Edit" asp-route-id="@c.Id" class="text-decoration-none">
+                            <b>@c.Name</b>
+                            <br />
+                            <span class="text-muted">@c.Description</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <!-- Блок 2: Курсы где слушатель -->
+    <div class="col-md-6">
+        <h4>🎧 Я участник</h4>
+
+        @if (Model.ParticipantCourses.Count == 0)
+        {
+            <p class="text-muted">Вы не участвуете ни в одном курсе.</p>
+        }
+        else
+        {
+            <ul class="list-group mb-3">
+                @foreach (var c in Model.ParticipantCourses)
+                {
+                    <li class="list-group-item">
+                        <a asp-page="/Courses/Details" asp-route-id="@c.Id" class="text-decoration-none">
+                            <b>@c.Name</b>
+                            <br />
+                            <span class="text-muted">@c.Description</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+<hr />
+
+<!-- Форма создания курса -->
+<h4 class="mt-4">➕ Создать новый курс</h4>
+
+<form method="post" asp-page-handler="Create" class="mt-3">
+    <div class="mb-3">
+        <label class="form-label">Название курса</label>
+        <input asp-for="NewCourseName" class="form-control" />
+        <span asp-validation-for="NewCourseName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Описание</label>
+        <textarea asp-for="NewCourseDescription" class="form-control"></textarea>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Создать</button>
+</form>

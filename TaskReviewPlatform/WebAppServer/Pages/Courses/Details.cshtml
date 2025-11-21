@@ -1,0 +1,28 @@
+﻿@page "{id:int}"
+@model WebAppServer.Pages.Courses.DetailsModel
+@{
+    ViewData["Title"] = "Курс: " + Model.Course?.Name;
+}
+
+<h2>@Model.Course?.Name</h2>
+<p>@Model.Course?.Description</p>
+
+<hr />
+
+<h4>Задания</h4>
+
+@if (Model.Course?.Tasks.Count == 0)
+{
+    <p class="text-muted">Заданий пока нет.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var task in Model.Course.Tasks)
+        {
+            <li class="list-group-item">
+                <a asp-page="/Tasks/Answers" asp-route-id="@task.Id">@task.Name</a>
+            </li>
+        }
+    </ul>
+}

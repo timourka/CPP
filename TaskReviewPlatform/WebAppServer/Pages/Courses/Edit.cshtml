@@ -1,0 +1,66 @@
+﻿@page "{id:int}"
+@model WebAppServer.Pages.Courses.EditModel
+@{
+    ViewData["Title"] = "Редактировать курс";
+}
+
+<h2>Редактирование курса: @Model.Course.Name</h2>
+
+<form method="post" asp-page-handler="Update">
+    <div class="mb-3">
+        <label>Название</label>
+        <input asp-for="Course.Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Описание</label>
+        <textarea asp-for="Course.Description" class="form-control"></textarea>
+    </div>
+    <button class="btn btn-success" type="submit">Сохранить</button>
+</form>
+
+<hr />
+
+<h4>Участники</h4>
+<ul>
+    @foreach (var u in Model.Course.Participants)
+    {
+        <li>@u.Login (@u.Name)</li>
+    }
+</ul>
+
+<form method="post" asp-page-handler="AddUser">
+    <div class="input-group mb-3">
+        <input asp-for="NewUserLogin" class="form-control" placeholder="Логин нового участника" />
+        <button class="btn btn-primary" type="submit">Добавить</button>
+    </div>
+</form>
+
+<hr />
+
+<h4>Задания</h4>
+<ul>
+    @foreach (var t in Model.Course.Tasks)
+    {
+        <li>
+            <a asp-page="/Tasks/Edit" asp-route-id="@t.Id">@t.Name</a>
+        </li>
+    }
+</ul>
+
+<form method="post" asp-page-handler="AddTask">
+    <div class="mb-3">
+        <label>Название задания</label>
+        <input asp-for="NewTaskName" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Описание задания</label>
+        <textarea asp-for="NewTaskDescription" class="form-control"></textarea>
+    </div>
+    <button class="btn btn-primary" type="submit">Создать задание</button>
+</form>
+
+<hr />
+
+<form method="post" asp-page-handler="DeleteCourse">
+    <button class="btn btn-danger" onclick="return confirm('Удалить курс?');">Удалить курс</button>
+</form>

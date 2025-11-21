@@ -1,0 +1,60 @@
+﻿@page "{id:int}"
+@model WebAppServer.Pages.Tasks.AnswersModel
+@{
+    ViewData["Title"] = "Ответы на задание: " + Model.Task?.Name;
+}
+
+<h2>@Model.Task?.Name</h2>
+<p>@Model.Task?.Description</p>
+
+<hr />
+
+<h4>Мои ответы</h4>
+
+@if (Model.UserAnswers.Count == 0)
+{
+    <p class="text-muted">Вы еще не создали ответ.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Текст</th>
+                <th>Оценка</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model.UserAnswers)
+            {
+                <tr>
+                    <td>@a.Text</td>
+                    <td>@a.Grade</td>
+                    <td>
+                        <form method="post" asp-page-handler="Delete" class="d-inline">
+                            <input type="hidden" name="answerId" value="@a.Id" />
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить ответ?');">Удалить</button>
+                        </form>
+
+                        <form method="post" asp-page-handler="Edit" class="d-inline">
+                            <input type="hidden" name="answerId" value="@a.Id" />
+                            <input type="text" name="newText" class="form-control d-inline w-auto" placeholder="Новый текст" />
+                            <button class="btn btn-sm btn-warning">Редактировать</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<hr />
+
+<h4>Создать новый ответ</h4>
+<form method="post" asp-page-handler="Create">
+    <div class="mb-3">
+        <textarea asp-for="NewAnswerText" class="form-control" placeholder="Текст ответа"></textarea>
+    </div>
+    <button class="btn btn-primary" type="submit">Создать</button>
+</form>

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
+using Models.Models;
+using Repository;
 using Repository.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,9 +13,16 @@ builder.Services.AddRazorPages();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
-// Добавляем Identity
-builder.Services.AddDefaultIdentity<IdentityUser>()
-    .AddEntityFrameworkStores<AppDbContext>();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login";   // куда бросать незалогиненных
+    });
+
+builder.Services.AddAuthorization();
+
+// регистрируем твой репозиторий
+builder.Services.AddScoped<IRepository<User>, Repository<User>>();
 
 var app = builder.Build();
 

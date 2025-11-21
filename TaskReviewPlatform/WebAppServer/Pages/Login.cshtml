@@ -1,15 +1,19 @@
 ﻿@page
 @model LoginModel
+
 <h2>Вход</h2>
 
 <form method="post">
     <div>
-        <label>Email</label>
-        <input type="text" asp-for="Email" />
+        <label>Логин</label>
+        <input asp-for="Login" />
     </div>
     <div>
         <label>Пароль</label>
-        <input type="password" asp-for="Password" />
+        <input asp-for="Password" type="password" />
     </div>
+
     <button type="submit">Войти</button>
 </form>
+
+<span style="color:red">@Html.ValidationSummary()</span>

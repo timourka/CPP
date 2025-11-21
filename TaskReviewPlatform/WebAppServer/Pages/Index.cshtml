@@ -1,12 +1,16 @@
 ﻿@page
 @using Microsoft.AspNetCore.Authorization
 @model IndexModel
-@attribute [Authorize]
-
 <h1>Добро пожаловать!</h1>
 
 <ul>
-    <li><a asp-page="/Courses">Список курсов</a></li>
-    <li><a asp-page="/Tasks">Список заданий</a></li>
-    <li><a asp-page="/Answers">Мои ответы</a></li>
+    @if (User.IsInRole("Admin"))
+    {
+        <li><a href="/Admin/Panel">Админ панель</a></li>
+    }
+    else
+    {
+        <li><a asp-page="/Courses">Список курсов</a></li>
+        <li><a asp-page="/Answers">Мои ответы</a></li>
+    }
 </ul>
