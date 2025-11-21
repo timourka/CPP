@@ -1,2 +1,83 @@
 ~$*.docx
 .ReviewSystem.vpp.lck
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+*.log
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+packages/
+# NuGet v3
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# VS Code
+.vscode/
+
+# Visual Studio cache/options
+*.cache
+*.ilk
+*.pdb
+*.idb
+*.ipch
+*.aps
+*.ncb
+*.opendb
+*.iobj
+*.pch
+*.pdb
+*.rsp
+*.sbr
+*.tlh
+*.tli
+*.tmp
+*.tmp_proj
+*.log
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Entity Framework Migrations
+Migrations/
+
+# Publish output
+*.Publish.xml
+*.pubxml
+*.publishproj
+
+# Others
+_ReSharper*/
+*.DotSettings.user
+*.ReSharper*/
+*.DotSettings
+*.dbmdl
+*.bak
+*.Backup
+*.swp
