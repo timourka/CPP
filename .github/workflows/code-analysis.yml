@@ -30,11 +30,16 @@ jobs:
 
       - name: Restore dependencies
         if: steps.check_project.outputs.found == 'true'
-        run: dotnet restore
+        run: |
+          sln=$(ls **/*.sln | head -n 1)
+          echo "Using solution: $sln"
+          dotnet restore "$sln"
 
       - name: Build and analyze
         if: steps.check_project.outputs.found == 'true'
-        run: dotnet build --configuration Release /warnaserror
+        run: |
+          sln=$(ls **/*.sln | head -n 1)
+          dotnet build "$sln" --configuration Release /warnaserror
 
       - name: Skip message
         if: steps.check_project.outputs.found == 'false'
