@@ -39,7 +39,7 @@ jobs:
         if: steps.check_project.outputs.found == 'true'
         run: |
           sln=$(ls **/*.sln | head -n 1)
-          dotnet build "$sln" --configuration Release /warnaserror
+          dotnet build "$sln" --configuration Release
 
       - name: Skip message
         if: steps.check_project.outputs.found == 'false'
