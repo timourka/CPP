@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
@@ -32,6 +33,8 @@ namespace WebAppServer.Pages.Tasks
 
         [BindProperty]
         public IFormFile? NewAnswerFile { get; set; }
+
+        public IReadOnlyList<string> MonacoSupportedExtensions => MonacoSupport.MonacoSupportedExtensions;
 
         private bool CanModifyAnswer(Answer answer, string login)
         {

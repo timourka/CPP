@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
@@ -16,44 +17,6 @@ namespace WebAppServer.Pages.Tasks
     {
         private readonly AppDbContext _db;
         private readonly IWebHostEnvironment _env;
-
-        private static readonly HashSet<string> AllowedPreviewExtensions = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".txt",
-            ".cs",
-            ".js",
-            ".json",
-            ".md",
-            ".xml",
-            ".html",
-            ".css",
-            ".sql",
-            ".py",
-            ".java",
-            ".cpp",
-            ".c",
-            ".ts",
-            ".cshtml"
-        };
-
-        private static readonly Dictionary<string, string> MonacoLanguageByExtension = new(StringComparer.OrdinalIgnoreCase)
-        {
-            [".txt"] = "plaintext",
-            [".md"] = "markdown",
-            [".cs"] = "csharp",
-            [".js"] = "javascript",
-            [".ts"] = "typescript",
-            [".json"] = "json",
-            [".xml"] = "xml",
-            [".html"] = "html",
-            [".css"] = "css",
-            [".sql"] = "sql",
-            [".py"] = "python",
-            [".java"] = "java",
-            [".cpp"] = "cpp",
-            [".c"] = "c",
-            [".cshtml"] = "razor"
-        };
 
         public ReviewModel(AppDbContext db, IWebHostEnvironment env)
         {
@@ -78,7 +41,7 @@ namespace WebAppServer.Pages.Tasks
 
         public List<string> ActiveFileLines { get; set; } = new();
 
-        public IReadOnlyList<string> MonacoSupportedExtensions { get; } = MonacoLanguageByExtension.Keys.OrderBy(e => e).ToList();
+        public IReadOnlyList<string> MonacoSupportedExtensions { get; } = MonacoSupport.MonacoSupportedExtensions;
 
         public string? FileError { get; set; }
 
@@ -264,11 +227,11 @@ namespace WebAppServer.Pages.Tasks
             }
 
             ActiveFileName = file.Name;
-            ActiveFileLanguage = MonacoLanguageByExtension.TryGetValue(Path.GetExtension(file.Name), out var language)
+            ActiveFileLanguage = MonacoSupport.MonacoLanguageByExtension.TryGetValue(Path.GetExtension(file.Name), out var language)
                 ? language
                 : "plaintext";
 
-            if (!AllowedPreviewExtensions.Contains(Path.GetExtension(file.Name)))
+            if (!MonacoSupport.AllowedPreviewExtensions.Contains(Path.GetExtension(file.Name)))
             {
                 FileError = "Просмотр поддерживается только для текстовых файлов.";
                 return;
