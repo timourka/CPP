@@ -9,6 +9,9 @@ namespace Models.Models
         public User? Student { get; set; }
         public Task? Task { get; set; }
 
+        public string? FilePath { get; set; }
+        public string? FileName { get; set; }
+
         public int Grade { get; set; } = -1;
         public string Status { get; set; } = "Черновик";
         public bool ReviewRequested { get; set; }

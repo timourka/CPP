@@ -20,7 +20,8 @@ else
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Текст</th>
+                <th>Описание</th>
+                <th>Файл</th>
                 <th>Статус</th>
                 <th>Оценка</th>
                 <th>Действия</th>
@@ -32,6 +33,16 @@ else
                 var canModify = a.Status != "Проверено" || a.AllowResubmit;
                 <tr>
                     <td>@a.Text</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(a.FilePath))
+                        {
+                            <a href="@a.FilePath" target="_blank">@(string.IsNullOrEmpty(a.FileName) ? "Скачать файл" : a.FileName)</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Файл не прикреплен</span>
+                        }
+                    </td>
                     <td>
                         @a.Status
                         @if (a.ReviewRequested)
@@ -48,9 +59,10 @@ else
                                 <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить ответ?');">Удалить</button>
                             </form>
 
-                            <form method="post" asp-page-handler="Edit" class="d-inline">
+                            <form method="post" asp-page-handler="Edit" class="d-inline" enctype="multipart/form-data">
                                 <input type="hidden" name="answerId" value="@a.Id" />
                                 <input type="text" name="newText" class="form-control d-inline w-auto" placeholder="Новый текст" />
+                                <input type="file" name="newFile" class="form-control d-inline w-auto" />
                                 <button class="btn btn-sm btn-warning">Редактировать</button>
                             </form>
 
@@ -76,9 +88,14 @@ else
 <hr />
 
 <h4>Создать новый ответ</h4>
-<form method="post" asp-page-handler="Create">
+<form method="post" asp-page-handler="Create" enctype="multipart/form-data">
     <div class="mb-3">
-        <textarea asp-for="NewAnswerText" class="form-control" placeholder="Текст ответа"></textarea>
+        <label class="form-label">Описание</label>
+        <textarea asp-for="NewAnswerText" class="form-control" placeholder="Опишите решение"></textarea>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Файл</label>
+        <input type="file" asp-for="NewAnswerFile" class="form-control" />
     </div>
     <button class="btn btn-primary" type="submit">Создать</button>
 </form>

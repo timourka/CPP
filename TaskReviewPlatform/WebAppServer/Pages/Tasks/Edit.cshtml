@@ -31,7 +31,8 @@ else
         <thead>
             <tr>
                 <th>Студент</th>
-                <th>Текст</th>
+                <th>Описание</th>
+                <th>Файл</th>
                 <th>Статус</th>
                 <th>Оценка</th>
                 <th>Действия</th>
@@ -43,6 +44,16 @@ else
                 <tr>
                     <td>@a.Student?.Login</td>
                     <td>@a.Text</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(a.FilePath))
+                        {
+                            <a href="@a.FilePath" target="_blank">@(string.IsNullOrEmpty(a.FileName) ? "Скачать файл" : a.FileName)</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Файл не прикреплен</span>
+                        }
+                    </td>
                     <td>
                         @a.Status
                         @if (a.ReviewRequested)

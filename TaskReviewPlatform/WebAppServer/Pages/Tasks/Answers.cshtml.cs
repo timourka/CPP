@@ -1,4 +1,7 @@
+using System;
+using System.IO;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +14,12 @@ namespace WebAppServer.Pages.Tasks
     public class AnswersModel : PageModel
     {
         private readonly AppDbContext _db;
+        private readonly IWebHostEnvironment _env;
 
-        public AnswersModel(AppDbContext db)
+        public AnswersModel(AppDbContext db, IWebHostEnvironment env)
         {
             _db = db;
+            _env = env;
         }
 
         public Models.Models.Task? Task { get; set; }
@@ -22,6 +27,9 @@ namespace WebAppServer.Pages.Tasks
 
         [BindProperty]
         public string NewAnswerText { get; set; } = string.Empty;
+
+        [BindProperty]
+        public IFormFile? NewAnswerFile { get; set; }
 
         private bool CanModifyAnswer(Answer answer, string login)
         {
@@ -76,11 +84,15 @@ namespace WebAppServer.Pages.Tasks
             if (user == null)
                 return Forbid();
 
+            var filePath = await SaveFileAsync(NewAnswerFile);
+
             var answer = new Answer
             {
                 Text = NewAnswerText.Trim(),
                 Student = user,
                 Task = Task,
+                FilePath = filePath,
+                FileName = NewAnswerFile?.FileName,
                 Grade = -1,
                 Status = "Черновик",
                 ReviewRequested = false,
@@ -107,13 +119,14 @@ namespace WebAppServer.Pages.Tasks
             if (!CanModifyAnswer(answer, login))
                 return Forbid();
 
+            DeleteFileIfExists(answer.FilePath);
             _db.Answers.Remove(answer);
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
         }
 
-        public async Task<IActionResult> OnPostEditAsync(int answerId, string newText)
+        public async Task<IActionResult> OnPostEditAsync(int answerId, string newText, IFormFile? newFile)
         {
             var answer = await _db.Answers
                 .Include(a => a.Student)
@@ -131,6 +144,13 @@ namespace WebAppServer.Pages.Tasks
             answer.Status = "Черновик";
             answer.ReviewRequested = false;
             answer.Grade = -1;
+
+            if (newFile != null && newFile.Length > 0)
+            {
+                DeleteFileIfExists(answer.FilePath);
+                answer.FilePath = await SaveFileAsync(newFile);
+                answer.FileName = newFile.FileName;
+            }
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
@@ -158,6 +178,36 @@ namespace WebAppServer.Pages.Tasks
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
+        }
+
+        private async Task<string?> SaveFileAsync(IFormFile? file)
+        {
+            if (file == null || file.Length == 0)
+                return null;
+
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            await using var stream = System.IO.File.Create(filePath);
+            await file.CopyToAsync(stream);
+
+            return $"/uploads/{fileName}";
+        }
+
+        private void DeleteFileIfExists(string? relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+                return;
+
+            var localPath = relativePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            var fullPath = Path.Combine(_env.WebRootPath, localPath);
+            if (System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+            }
         }
     }
 }
