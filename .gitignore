@@ -64,9 +64,6 @@ ScaffoldingReadMe.txt
 *.userosscache
 *.sln.docstates
 
-# Entity Framework Migrations
-Migrations/
-
 # Publish output
 *.Publish.xml
 *.pubxml
