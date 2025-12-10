@@ -82,7 +82,11 @@
                 }
                 else
                 {
-                    <div id="monaco-wrapper" class="border rounded" style="height: 60vh;"></div>
+                    <div id="monaco-wrapper" class="border rounded position-relative" style="height: 60vh;">
+                        <div id="monaco-loading" class="position-absolute top-50 start-50 translate-middle text-muted">
+                            Загрузка Monaco Editor...
+                        </div>
+                    </div>
                     <pre id="monaco-fallback"
                          class="border rounded mt-2 p-3 bg-light"
                          style="height: 60vh; overflow: auto; white-space: pre;">
@@ -145,8 +149,6 @@
     }
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js" integrity="sha512-8yAbbrC+AEPiMEJrIW6DCe4k74vNDi/jVHTJfK5q8hrZ1tNzmh7qFgODXx8sZF3SKBq9lTvFMaMTKrtkiCKmOQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
 <script>
     (function () {
         const wrapper = document.getElementById('monaco-wrapper');
@@ -160,74 +162,112 @@
         const lineLabel = document.getElementById('selected-line');
         const commentArea = document.getElementById('comment-textarea');
 
-        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
-
         const fallback = document.getElementById('monaco-fallback');
+        const loaderMessage = document.getElementById('monaco-loading');
 
-        if (typeof require !== 'function') {
+        const cdnSources = [
+            'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js',
+            'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js'
+        ];
+
+        function showFallback() {
+            if (loaderMessage) {
+                loaderMessage.textContent = 'Не удалось загрузить Monaco Editor, показываем текстовый просмотр.';
+            }
             if (fallback) {
                 fallback.style.display = '';
             }
-            return;
         }
 
-        require(['vs/editor/editor.main'], function () {
-            const editor = monaco.editor.create(wrapper, {
-                value: editorContent,
-                language: editorLanguage,
-                readOnly: true,
-                glyphMargin: true,
-                scrollBeyondLastLine: false,
-                minimap: { enabled: false },
-                automaticLayout: true
-            });
-
-            if (fallback) {
-                fallback.style.display = 'none';
-            }
-
-            editor.onMouseDown(function (e) {
-                if (e.target?.position) {
-                    const line = e.target.position.lineNumber;
-                    if (lineInput) {
-                        lineInput.value = line;
-                    }
-                    if (lineLabel) {
-                        lineLabel.textContent = `Строка ${line}`;
-                    }
-                    if (commentArea) {
-                        commentArea.focus();
-                    }
+        function loadLoader(index = 0) {
+            return new Promise((resolve, reject) => {
+                if (index >= cdnSources.length) {
+                    reject();
+                    return;
                 }
+
+                const existing = document.querySelector(`script[data-monaco-loader="${index}"]`);
+                if (existing) {
+                    existing.addEventListener('load', () => resolve(cdnSources[index]));
+                    existing.addEventListener('error', () => loadLoader(index + 1).then(resolve).catch(reject));
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = cdnSources[index];
+                script.async = true;
+                script.setAttribute('data-monaco-loader', index.toString());
+                script.onload = () => resolve(cdnSources[index]);
+                script.onerror = () => loadLoader(index + 1).then(resolve).catch(reject);
+                document.body.appendChild(script);
             });
+        }
 
-            const comments = @Html.Raw(JsonSerializer.Serialize(Model.Comments
-                .Where(c => c.LineNumber.HasValue)
-                .Select(c => new
-                {
-                    line = c.LineNumber,
-                    text = c.Text,
-                    author = c.Reviewer?.Login,
-                    created = c.CreatedAt.ToLocalTime().ToString("g")
-                })));            
+        loadLoader()
+            .then((loaderSrc) => {
+                const baseUrl = loaderSrc.replace(/\/loader(\.min)?\.js$/, '');
+                require.config({ paths: { 'vs': baseUrl } });
 
-            if (Array.isArray(comments) && comments.length) {
-                const decorations = comments.map(c => ({
-                    range: new monaco.Range(c.line, 1, c.line, 1),
-                    options: {
-                        isWholeLine: true,
-                        glyphMarginClassName: 'monaco-comment-glyph',
-                        glyphMarginHoverMessage: { value: `${c.author ?? 'Комментарий'} (${c.created})\\n${c.text}` },
-                        className: 'monaco-comment-line'
+                require(['vs/editor/editor.main'], function () {
+                    const editor = monaco.editor.create(wrapper, {
+                        value: editorContent,
+                        language: editorLanguage,
+                        readOnly: true,
+                        glyphMargin: true,
+                        scrollBeyondLastLine: false,
+                        minimap: { enabled: false },
+                        automaticLayout: true
+                    });
+
+                    if (fallback) {
+                        fallback.style.display = 'none';
                     }
-                }));
+                    if (loaderMessage) {
+                        loaderMessage.style.display = 'none';
+                    }
 
-                editor.deltaDecorations([], decorations);
-            }
-        }, function () {
-            if (fallback) {
-                fallback.classList.remove('d-none');
-            }
-        });
+                    editor.onMouseDown(function (e) {
+                        if (e.target?.position) {
+                            const line = e.target.position.lineNumber;
+                            if (lineInput) {
+                                lineInput.value = line;
+                            }
+                            if (lineLabel) {
+                                lineLabel.textContent = `Строка ${line}`;
+                            }
+                            if (commentArea) {
+                                commentArea.focus();
+                            }
+                        }
+                    });
+
+                    const comments = @Html.Raw(JsonSerializer.Serialize(Model.Comments
+                        .Where(c => c.LineNumber.HasValue)
+                        .Select(c => new
+                        {
+                            line = c.LineNumber,
+                            text = c.Text,
+                            author = c.Reviewer?.Login,
+                            created = c.CreatedAt.ToLocalTime().ToString("g")
+                        })));
+
+                    if (Array.isArray(comments) && comments.length) {
+                        const decorations = comments.map(c => ({
+                            range: new monaco.Range(c.line, 1, c.line, 1),
+                            options: {
+                                isWholeLine: true,
+                                glyphMarginClassName: 'monaco-comment-glyph',
+                                glyphMarginHoverMessage: { value: `${c.author ?? 'Комментарий'} (${c.created})\\n${c.text}` },
+                                className: 'monaco-comment-line'
+                            }
+                        }));
+
+                        editor.deltaDecorations([], decorations);
+                    }
+                }, function () {
+                    showFallback();
+                });
+            })
+            .catch(showFallback);
     })();
 </script>
