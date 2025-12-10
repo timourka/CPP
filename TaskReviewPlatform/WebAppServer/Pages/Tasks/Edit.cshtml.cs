@@ -91,6 +91,29 @@ namespace WebAppServer.Pages.Tasks
 
             answer.Grade = 100; // например, проверка + выставление балла
             answer.Status = "Проверено";
+            answer.ReviewRequested = false;
+            answer.AllowResubmit = false;
+            await _db.SaveChangesAsync();
+
+            return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });
+        }
+
+        public async Task<IActionResult> OnPostAllowRetryAsync(int answerId)
+        {
+            var answer = await _db.Answers.Include(a => a.Task).ThenInclude(t => t.Course).ThenInclude(c => c.Avtors)
+                .FirstOrDefaultAsync(a => a.Id == answerId);
+
+            if (answer == null)
+                return NotFound();
+
+            var login = User.Identity!.Name;
+            if (!answer.Task!.Course!.Avtors.Any(a => a.Login == login))
+                return Forbid();
+
+            answer.AllowResubmit = true;
+            answer.Status = "Разрешена повторная отправка";
+            answer.ReviewRequested = false;
+            answer.Grade = -1;
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });
