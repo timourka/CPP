@@ -4,7 +4,7 @@
     ViewData["Title"] = "Ревью ответа";
 }
 
-<h2>Ревью ответа студента</h2>
+<h2>Рецензирование ответа</h2>
 
 @if (Model.Answer == null)
 {
@@ -12,73 +12,149 @@
     return;
 }
 
-<div class="card mb-3">
-    <div class="card-body">
-        <h5 class="card-title">@Model.Answer.Student?.Login</h5>
-        <p class="card-text">@Model.Answer.Text</p>
-        <p class="card-text">
-            <strong>Файл:</strong>
-            @if (!string.IsNullOrEmpty(Model.Answer.FilePath))
+<div class="row">
+    <div class="col-lg-4 mb-3">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title mb-1">@Model.Answer.Student?.Login</h5>
+                <p class="text-muted mb-2">Ответ к заданию: @Model.Answer.Task?.Name</p>
+                <p class="mb-2">@Model.Answer.Text</p>
+                <div>
+                    <strong>Файлы:</strong>
+                    @if (Model.Files.Count == 0)
+                    {
+                        <div class="text-muted">Файлы не прикреплены</div>
+                    }
+                    else
+                    {
+                        <div class="list-group mt-2">
+                            @foreach (var file in Model.Files)
+                            {
+                                var isActive = file.RelativePath == Model.ActiveFilePath;
+                                <a class="list-group-item list-group-item-action @(isActive ? "active" : string.Empty)"
+                                   asp-page="/Tasks/Review"
+                                   asp-route-answerId="@Model.Answer.Id"
+                                   asp-route-file="@file.RelativePath">
+                                    @file.Name
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Итоги проверки</h5>
+                <form method="post" asp-page-handler="Finalize">
+                    <div class="mb-3">
+                        <label class="form-label">Оценка</label>
+                        <input asp-for="Grade" type="number" class="form-control" min="0" max="100" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="AllowResubmit" class="form-check-input" />
+                        <label class="form-check-label" for="AllowResubmit">Разрешить повторную отправку</label>
+                    </div>
+                    <button type="submit" class="btn btn-success">Сохранить результат</button>
+                    <a asp-page="/Tasks/Edit" asp-route-id="@Model.Answer.Task?.Id" class="btn btn-secondary ms-2">Назад к ответам</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Просмотр файла</h5>
+                @if (!string.IsNullOrEmpty(Model.FileError))
+                {
+                    <div class="alert alert-warning">@Model.FileError</div>
+                }
+                else if (string.IsNullOrEmpty(Model.ActiveFileName))
+                {
+                    <div class="text-muted">Выберите файл слева, чтобы открыть его содержимое.</div>
+                }
+                else if (Model.ActiveFileLines.Count == 0)
+                {
+                    <div class="text-muted">Файл пустой.</div>
+                }
+                else
+                {
+                    <div class="border rounded" style="max-height: 60vh; overflow-y: auto;">
+                        @for (var i = 0; i < Model.ActiveFileLines.Count; i++)
+                        {
+                            var lineNumber = i + 1;
+                            <div class="d-flex align-items-start border-bottom px-2 py-1">
+                                <div class="text-muted small me-2" style="width: 50px;">@lineNumber</div>
+                                <pre class="flex-grow-1 mb-0" style="white-space: pre-wrap; word-break: break-word;">@Model.ActiveFileLines[i]</pre>
+                                <button type="button" class="btn btn-link btn-sm text-decoration-none comment-line" data-line="@lineNumber">Комментировать</button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Комментарий к строке</h5>
+                <form method="post" asp-page-handler="AddComment">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <input type="hidden" asp-for="ActiveFilePath" />
+                    <input type="hidden" asp-for="LineNumber" />
+                    <div class="mb-2 text-muted" id="selected-line">@((Model.LineNumber ?? 0) > 0 ? $"Строка {Model.LineNumber}" : "Нажмите на строку в файле, чтобы выбрать её")</div>
+                    <div class="mb-3">
+                        <label class="form-label">Комментарий</label>
+                        <textarea asp-for="CommentText" class="form-control" rows="3" id="comment-textarea" placeholder="Введите замечание"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сохранить комментарий</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <h5>Комментарии к выбранному файлу</h5>
+            @if (Model.Comments.Count == 0)
             {
-                <a href="@Model.Answer.FilePath" target="_blank">@(string.IsNullOrEmpty(Model.Answer.FileName) ? "Скачать файл" : Model.Answer.FileName)</a>
+                <p class="text-muted">Комментариев пока нет.</p>
             }
             else
             {
-                <span class="text-muted">Файл не прикреплен</span>
+                <ul class="list-group">
+                    @foreach (var c in Model.Comments.OrderByDescending(c => c.CreatedAt))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <strong>@(c.LineNumber.HasValue ? $"Строка {c.LineNumber}" : "Без привязки")</strong>
+                                <small class="text-muted">@c.CreatedAt.ToLocalTime()</small>
+                            </div>
+                            <div class="text-muted">@c.Reviewer?.Login</div>
+                            <div>@c.Text</div>
+                        </li>
+                    }
+                </ul>
             }
-        </p>
+        </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-6">
-        <h4>Итоги проверки</h4>
-        <form method="post" asp-page-handler="Finalize">
-            <div class="mb-3">
-                <label class="form-label">Оценка</label>
-                <input asp-for="Grade" type="number" class="form-control" min="0" max="100" />
-            </div>
-            <div class="form-check mb-3">
-                <input asp-for="AllowResubmit" class="form-check-input" />
-                <label class="form-check-label" for="AllowResubmit">Разрешить повторную отправку</label>
-            </div>
-            <button type="submit" class="btn btn-success">Сохранить результат</button>
-            <a asp-page="/Tasks/Edit" asp-route-id="@Model.Answer.Task?.Id" class="btn btn-secondary ms-2">Назад к ответам</a>
-        </form>
-    </div>
-    <div class="col-md-6">
-        <h4>Комментарии к файлам</h4>
-        @if (Model.Comments.Count == 0)
-        {
-            <p class="text-muted">Комментариев пока нет.</p>
-        }
-        else
-        {
-            <ul class="list-group mb-3">
-                @foreach (var c in Model.Comments.OrderByDescending(c => c.CreatedAt))
-                {
-                    <li class="list-group-item">
-                        <div class="d-flex justify-content-between">
-                            <strong>@(c.LineNumber.HasValue ? $"Строка {c.LineNumber}" : "Общий комментарий")</strong>
-                            <small class="text-muted">@c.CreatedAt.ToLocalTime()</small>
-                        </div>
-                        <div class="text-muted">@c.Reviewer?.Login</div>
-                        <div>@c.Text</div>
-                    </li>
-                }
-            </ul>
-        }
-
-        <form method="post" asp-page-handler="AddComment">
-            <div class="mb-3">
-                <label class="form-label">Номер строки (опционально)</label>
-                <input asp-for="LineNumber" type="number" class="form-control" min="1" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Комментарий</label>
-                <textarea asp-for="CommentText" class="form-control" rows="3" placeholder="Оставьте заметку по файлу"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Добавить комментарий</button>
-        </form>
-    </div>
-</div>
+<script>
+    document.querySelectorAll('.comment-line').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const line = btn.getAttribute('data-line');
+            const lineInput = document.getElementById('LineNumber');
+            const lineLabel = document.getElementById('selected-line');
+            if (lineInput) {
+                lineInput.value = line;
+            }
+            if (lineLabel) {
+                lineLabel.textContent = `Строка ${line}`;
+            }
+            const commentArea = document.getElementById('comment-textarea');
+            if (commentArea) {
+                commentArea.focus();
+            }
+        });
+    });
+</script>
