@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Repository.Data;
+using System.Linq;
 
 namespace WebAppServer.Pages.Tasks
 {
@@ -17,6 +18,7 @@ namespace WebAppServer.Pages.Tasks
         public Models.Models.Task Task { get; set; } = new();
 
         public List<Answer> Answers { get; set; } = new();
+        public Dictionary<int, int> ReviewCommentsCount { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
@@ -36,6 +38,12 @@ namespace WebAppServer.Pages.Tasks
                 .Include(a => a.Student)
                 .Where(a => a.Task!.Id == id)
                 .ToListAsync();
+
+            var ids = Answers.Select(a => a.Id).ToList();
+            ReviewCommentsCount = await _db.ReviewComments
+                .Where(c => ids.Contains(c.Answer!.Id))
+                .GroupBy(c => c.Answer!.Id)
+                .ToDictionaryAsync(g => g.Key, g => g.Count());
 
             return Page();
         }
