@@ -170,6 +170,7 @@ namespace WebAppServer.Pages.Tasks
         {
             Answer = await _db.Answers
                 .Include(a => a.Student)
+                .Include(a => a.Files)
                 .Include(a => a.Task)!.ThenInclude(t => t.Course)!.ThenInclude(c => c.Avtors)
                 .FirstOrDefaultAsync(a => a.Id == answerId);
 
@@ -207,7 +208,18 @@ namespace WebAppServer.Pages.Tasks
         {
             Files.Clear();
 
-            if (!string.IsNullOrWhiteSpace(Answer?.FilePath))
+            if (Answer?.Files?.Count > 0)
+            {
+                foreach (var file in Answer.Files)
+                {
+                    Files.Add(new ReviewFile
+                    {
+                        Name = string.IsNullOrWhiteSpace(file.FileName) ? "Файл ответа" : file.FileName,
+                        RelativePath = file.RelativePath
+                    });
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(Answer?.FilePath))
             {
                 Files.Add(new ReviewFile
                 {

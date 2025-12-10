@@ -12,6 +12,8 @@ namespace Models.Models
         public string? FilePath { get; set; }
         public string? FileName { get; set; }
 
+        public List<AnswerFile> Files { get; set; } = new();
+
         public int Grade { get; set; } = -1;
         public string Status { get; set; } = "Черновик";
         public bool ReviewRequested { get; set; }

@@ -9,6 +9,7 @@ namespace Repository.Data
         public DbSet<Course> Courses { get; set; }
         public DbSet<Models.Models.Task> Tasks { get; set; }
         public DbSet<Answer> Answers { get; set; }
+        public DbSet<AnswerFile> AnswerFiles { get; set; }
         public DbSet<ReviewComment> ReviewComments { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options)
