@@ -9,7 +9,9 @@ namespace Models.Models
         public User? Student { get; set; }
         public Task? Task { get; set; }
 
-        public int Grade { get; set; }
-        public string Status { get; set; } = "Ожидает проверки";
+        public int Grade { get; set; } = -1;
+        public string Status { get; set; } = "Черновик";
+        public bool ReviewRequested { get; set; }
+        public bool AllowResubmit { get; set; }
     }
 }

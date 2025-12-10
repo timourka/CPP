@@ -43,13 +43,27 @@ else
                 <tr>
                     <td>@a.Student?.Login</td>
                     <td>@a.Text</td>
-                    <td>@a.Status</td>
-                    <td>@a.Grade</td>
+                    <td>
+                        @a.Status
+                        @if (a.ReviewRequested)
+                        {
+                            <span class="badge bg-info ms-2">Запрошено ревью</span>
+                        }
+                    </td>
+                    <td>@((a.Grade >= 0) ? a.Grade : "-")</td>
                     <td>
                         <form method="post" asp-page-handler="CheckAnswer" class="d-inline">
                             <input type="hidden" name="answerId" value="@a.Id" />
                             <button class="btn btn-sm btn-primary">Проверить</button>
                         </form>
+
+                        @if (a.Status == "Проверено" && !a.AllowResubmit)
+                        {
+                            <form method="post" asp-page-handler="AllowRetry" class="d-inline ms-1">
+                                <input type="hidden" name="answerId" value="@a.Id" />
+                                <button class="btn btn-sm btn-secondary">Разрешить повтор</button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }

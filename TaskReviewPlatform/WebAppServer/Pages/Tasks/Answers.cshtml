@@ -29,21 +29,43 @@ else
         <tbody>
             @foreach (var a in Model.UserAnswers)
             {
+                var canModify = a.Status != "Проверено" || a.AllowResubmit;
                 <tr>
                     <td>@a.Text</td>
-                    <td>@a.Status</td>
-                    <td>@a.Grade</td>
                     <td>
-                        <form method="post" asp-page-handler="Delete" class="d-inline">
-                            <input type="hidden" name="answerId" value="@a.Id" />
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить ответ?');">Удалить</button>
-                        </form>
+                        @a.Status
+                        @if (a.ReviewRequested)
+                        {
+                            <span class="badge bg-info ms-2">Запрошено ревью</span>
+                        }
+                    </td>
+                    <td>@((a.Grade >= 0) ? a.Grade : "-")</td>
+                    <td>
+                        @if (canModify)
+                        {
+                            <form method="post" asp-page-handler="Delete" class="d-inline">
+                                <input type="hidden" name="answerId" value="@a.Id" />
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить ответ?');">Удалить</button>
+                            </form>
 
-                        <form method="post" asp-page-handler="Edit" class="d-inline">
-                            <input type="hidden" name="answerId" value="@a.Id" />
-                            <input type="text" name="newText" class="form-control d-inline w-auto" placeholder="Новый текст" />
-                            <button class="btn btn-sm btn-warning">Редактировать</button>
-                        </form>
+                            <form method="post" asp-page-handler="Edit" class="d-inline">
+                                <input type="hidden" name="answerId" value="@a.Id" />
+                                <input type="text" name="newText" class="form-control d-inline w-auto" placeholder="Новый текст" />
+                                <button class="btn btn-sm btn-warning">Редактировать</button>
+                            </form>
+
+                            @if (!a.ReviewRequested)
+                            {
+                                <form method="post" asp-page-handler="RequestReview" class="d-inline ms-1">
+                                    <input type="hidden" name="answerId" value="@a.Id" />
+                                    <button class="btn btn-sm btn-primary">Запросить ревью</button>
+                                </form>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Повторная отправка не разрешена</span>
+                        }
                     </td>
                 </tr>
             }

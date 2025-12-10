@@ -23,6 +23,12 @@ namespace WebAppServer.Pages.Tasks
         [BindProperty]
         public string NewAnswerText { get; set; } = string.Empty;
 
+        private bool CanModifyAnswer(Answer answer, string login)
+        {
+            return answer.Student!.Login == login &&
+                   (answer.Status != "Проверено" || answer.AllowResubmit);
+        }
+
         public async Task<IActionResult> OnGetAsync(int id)
         {
             Task = await _db.Tasks
@@ -76,7 +82,9 @@ namespace WebAppServer.Pages.Tasks
                 Student = user,
                 Task = Task,
                 Grade = -1,
-                Status = "Ожидает проверки"
+                Status = "Черновик",
+                ReviewRequested = false,
+                AllowResubmit = false
             };
 
             _db.Answers.Add(answer);
@@ -96,7 +104,7 @@ namespace WebAppServer.Pages.Tasks
                 return NotFound();
 
             var login = User.Identity!.Name;
-            if (answer.Student!.Login != login)
+            if (!CanModifyAnswer(answer, login))
                 return Forbid();
 
             _db.Answers.Remove(answer);
@@ -116,11 +124,37 @@ namespace WebAppServer.Pages.Tasks
                 return NotFound();
 
             var login = User.Identity!.Name;
-            if (answer.Student!.Login != login)
+            if (!CanModifyAnswer(answer, login))
                 return Forbid();
 
             answer.Text = newText.Trim();
+            answer.Status = "Черновик";
+            answer.ReviewRequested = false;
+            answer.Grade = -1;
+            await _db.SaveChangesAsync();
+
+            return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
+        }
+
+        public async Task<IActionResult> OnPostRequestReviewAsync(int answerId)
+        {
+            var answer = await _db.Answers
+                .Include(a => a.Student)
+                .Include(a => a.Task)
+                .FirstOrDefaultAsync(a => a.Id == answerId);
+
+            if (answer == null)
+                return NotFound();
+
+            var login = User.Identity!.Name;
+            if (!CanModifyAnswer(answer, login))
+                return Forbid();
+
             answer.Status = "Ожидает проверки";
+            answer.ReviewRequested = true;
+            answer.AllowResubmit = false;
+            answer.Grade = -1;
+
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
