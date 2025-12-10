@@ -83,6 +83,11 @@
                 else
                 {
                     <div id="monaco-wrapper" class="border rounded" style="height: 60vh;"></div>
+                    <pre id="monaco-fallback"
+                         class="border rounded mt-2 p-3 bg-light"
+                         style="height: 60vh; overflow: auto; white-space: pre;">
+@string.Join("\n", Model.ActiveFileLines.Select((line, idx) => $"{idx + 1,4}: {line}"))
+                    </pre>
                 }
             </div>
         </div>
@@ -157,6 +162,15 @@
 
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
 
+        const fallback = document.getElementById('monaco-fallback');
+
+        if (typeof require !== 'function') {
+            if (fallback) {
+                fallback.style.display = '';
+            }
+            return;
+        }
+
         require(['vs/editor/editor.main'], function () {
             const editor = monaco.editor.create(wrapper, {
                 value: editorContent,
@@ -167,6 +181,10 @@
                 minimap: { enabled: false },
                 automaticLayout: true
             });
+
+            if (fallback) {
+                fallback.style.display = 'none';
+            }
 
             editor.onMouseDown(function (e) {
                 if (e.target?.position) {
@@ -205,6 +223,10 @@
                 }));
 
                 editor.deltaDecorations([], decorations);
+            }
+        }, function () {
+            if (fallback) {
+                fallback.classList.remove('d-none');
             }
         });
     })();
