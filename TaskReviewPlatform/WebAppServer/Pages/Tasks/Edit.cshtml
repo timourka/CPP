@@ -32,6 +32,7 @@ else
             <tr>
                 <th>Студент</th>
                 <th>Текст</th>
+                <th>Статус</th>
                 <th>Оценка</th>
                 <th>Действия</th>
             </tr>
@@ -42,6 +43,7 @@ else
                 <tr>
                     <td>@a.Student?.Login</td>
                     <td>@a.Text</td>
+                    <td>@a.Status</td>
                     <td>@a.Grade</td>
                     <td>
                         <form method="post" asp-page-handler="CheckAnswer" class="d-inline">

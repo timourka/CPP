@@ -21,6 +21,7 @@ else
         <thead>
             <tr>
                 <th>Текст</th>
+                <th>Статус</th>
                 <th>Оценка</th>
                 <th>Действия</th>
             </tr>
@@ -30,6 +31,7 @@ else
             {
                 <tr>
                     <td>@a.Text</td>
+                    <td>@a.Status</td>
                     <td>@a.Grade</td>
                     <td>
                         <form method="post" asp-page-handler="Delete" class="d-inline">

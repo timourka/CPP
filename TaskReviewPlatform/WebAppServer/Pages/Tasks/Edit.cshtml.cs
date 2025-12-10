@@ -90,6 +90,7 @@ namespace WebAppServer.Pages.Tasks
                 return Forbid();
 
             answer.Grade = 100; // например, проверка + выставление балла
+            answer.Status = "Проверено";
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });
