@@ -75,7 +75,8 @@ namespace WebAppServer.Pages.Tasks
                 Text = NewAnswerText.Trim(),
                 Student = user,
                 Task = Task,
-                Grade = -1
+                Grade = -1,
+                Status = "Ожидает проверки"
             };
 
             _db.Answers.Add(answer);
@@ -119,6 +120,7 @@ namespace WebAppServer.Pages.Tasks
                 return Forbid();
 
             answer.Text = newText.Trim();
+            answer.Status = "Ожидает проверки";
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });

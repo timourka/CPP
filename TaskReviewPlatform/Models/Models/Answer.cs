@@ -10,5 +10,6 @@ namespace Models.Models
         public Task? Task { get; set; }
 
         public int Grade { get; set; }
+        public string Status { get; set; } = "Ожидает проверки";
     }
 }
