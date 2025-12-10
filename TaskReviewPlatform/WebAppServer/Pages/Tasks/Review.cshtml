@@ -1,0 +1,276 @@
+@page "{answerId:int}"
+@model WebAppServer.Pages.Tasks.ReviewModel
+@using System.Text.Json
+@{ 
+    ViewData["Title"] = "Ревью ответа";
+}
+
+<h2>Рецензирование ответа</h2>
+
+@if (Model.Answer == null)
+{
+    <div class="alert alert-danger">Ответ не найден.</div>
+    return;
+}
+
+<div class="row">
+    <div class="col-lg-4 mb-3">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title mb-1">@Model.Answer.Student?.Login</h5>
+                <p class="text-muted mb-2">Ответ к заданию: @Model.Answer.Task?.Name</p>
+                <p class="mb-2">@Model.Answer.Text</p>
+                <div>
+                    <strong>Файлы:</strong>
+                    @if (Model.Files.Count == 0)
+                    {
+                        <div class="text-muted">Файлы не прикреплены</div>
+                    }
+                    else
+                    {
+                        <div class="list-group mt-2">
+                            @foreach (var file in Model.Files)
+                            {
+                                var isActive = file.RelativePath == Model.ActiveFilePath;
+                                <a class="list-group-item list-group-item-action @(isActive ? "active" : string.Empty)"
+                                   asp-page="/Tasks/Review"
+                                   asp-route-answerId="@Model.Answer.Id"
+                                   asp-route-file="@file.RelativePath">
+                                    @file.Name
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Итоги проверки</h5>
+                <form method="post" asp-page-handler="Finalize">
+                    <div class="mb-3">
+                        <label class="form-label">Оценка</label>
+                        <input asp-for="Grade" type="number" class="form-control" min="0" max="100" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="AllowResubmit" class="form-check-input" />
+                        <label class="form-check-label" for="AllowResubmit">Разрешить повторную отправку</label>
+                    </div>
+                    <button type="submit" class="btn btn-success">Сохранить результат</button>
+                    <a asp-page="/Tasks/Edit" asp-route-id="@Model.Answer.Task?.Id" class="btn btn-secondary ms-2">Назад к ответам</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Просмотр файла</h5>
+                <div class="alert alert-info small mb-3">
+                    <strong>Поддерживаемые форматы Monaco:</strong> @string.Join(", ", Model.MonacoSupportedExtensions)
+                </div>
+                @if (!string.IsNullOrEmpty(Model.FileError))
+                {
+                    <div class="alert alert-warning">@Model.FileError</div>
+                }
+                else if (string.IsNullOrEmpty(Model.ActiveFileName))
+                {
+                    <div class="text-muted">Выберите файл слева, чтобы открыть его содержимое.</div>
+                }
+                else if (Model.ActiveFileLines.Count == 0)
+                {
+                    <div class="text-muted">Файл пустой.</div>
+                }
+                else
+                {
+                    <div id="monaco-wrapper" class="border rounded position-relative" style="height: 60vh;">
+                        <div id="monaco-loading" class="position-absolute top-50 start-50 translate-middle text-muted">
+                            Загрузка Monaco Editor...
+                        </div>
+                    </div>
+                    <pre id="monaco-fallback"
+                         class="border rounded mt-2 p-3 bg-light"
+                         style="height: 60vh; overflow: auto; white-space: pre;">
+@string.Join("\n", Model.ActiveFileLines.Select((line, idx) => $"{idx + 1,4}: {line}"))
+                    </pre>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Комментарий к строке</h5>
+                <form method="post" asp-page-handler="AddComment">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <input type="hidden" asp-for="ActiveFilePath" />
+                    <input type="hidden" asp-for="LineNumber" />
+                    <div class="mb-2 text-muted" id="selected-line">@((Model.LineNumber ?? 0) > 0 ? $"Строка {Model.LineNumber}" : "Нажмите на строку в файле, чтобы выбрать её")</div>
+                    <div class="mb-3">
+                        <label class="form-label">Комментарий</label>
+                        <textarea asp-for="CommentText" class="form-control" rows="3" id="comment-textarea" placeholder="Введите замечание"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сохранить комментарий</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <h5>Комментарии к выбранному файлу</h5>
+            @if (Model.Comments.Count == 0)
+            {
+                <p class="text-muted">Комментариев пока нет.</p>
+            }
+            else
+            {
+                <ul class="list-group">
+                    @foreach (var c in Model.Comments.OrderByDescending(c => c.CreatedAt))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <strong>@(c.LineNumber.HasValue ? $"Строка {c.LineNumber}" : "Без привязки")</strong>
+                                <small class="text-muted">@c.CreatedAt.ToLocalTime()</small>
+                            </div>
+                            <div class="text-muted">@c.Reviewer?.Login</div>
+                            <div>@c.Text</div>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .monaco-comment-glyph {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23f0ad4e" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v11.793a.5.5 0 0 0 .854.353L3.5 11H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2Z"/></svg>') no-repeat center center;
+    }
+
+    .monaco-comment-line {
+        background-color: rgba(240, 173, 78, 0.12);
+    }
+</style>
+
+<script>
+    (function () {
+        const wrapper = document.getElementById('monaco-wrapper');
+        if (!wrapper) {
+            return;
+        }
+
+        const editorContent = @Html.Raw(JsonSerializer.Serialize(Model.ActiveFileContent ?? string.Empty));
+        const editorLanguage = @Html.Raw(JsonSerializer.Serialize(Model.ActiveFileLanguage ?? "plaintext"));
+        const lineInput = document.getElementById('LineNumber');
+        const lineLabel = document.getElementById('selected-line');
+        const commentArea = document.getElementById('comment-textarea');
+
+        const fallback = document.getElementById('monaco-fallback');
+        const loaderMessage = document.getElementById('monaco-loading');
+
+        const cdnSources = [
+            'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js',
+            'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js'
+        ];
+
+        function showFallback() {
+            if (loaderMessage) {
+                loaderMessage.textContent = 'Не удалось загрузить Monaco Editor, показываем текстовый просмотр.';
+            }
+            if (fallback) {
+                fallback.style.display = '';
+            }
+        }
+
+        function loadLoader(index = 0) {
+            return new Promise((resolve, reject) => {
+                if (index >= cdnSources.length) {
+                    reject();
+                    return;
+                }
+
+                const existing = document.querySelector(`script[data-monaco-loader="${index}"]`);
+                if (existing) {
+                    existing.addEventListener('load', () => resolve(cdnSources[index]));
+                    existing.addEventListener('error', () => loadLoader(index + 1).then(resolve).catch(reject));
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = cdnSources[index];
+                script.async = true;
+                script.setAttribute('data-monaco-loader', index.toString());
+                script.onload = () => resolve(cdnSources[index]);
+                script.onerror = () => loadLoader(index + 1).then(resolve).catch(reject);
+                document.body.appendChild(script);
+            });
+        }
+
+        loadLoader()
+            .then((loaderSrc) => {
+                const baseUrl = loaderSrc.replace(/\/loader(\.min)?\.js$/, '');
+                require.config({ paths: { 'vs': baseUrl } });
+
+                require(['vs/editor/editor.main'], function () {
+                    const editor = monaco.editor.create(wrapper, {
+                        value: editorContent,
+                        language: editorLanguage,
+                        readOnly: true,
+                        glyphMargin: true,
+                        scrollBeyondLastLine: false,
+                        minimap: { enabled: false },
+                        automaticLayout: true
+                    });
+
+                    if (fallback) {
+                        fallback.style.display = 'none';
+                    }
+                    if (loaderMessage) {
+                        loaderMessage.style.display = 'none';
+                    }
+
+                    editor.onMouseDown(function (e) {
+                        if (e.target?.position) {
+                            const line = e.target.position.lineNumber;
+                            if (lineInput) {
+                                lineInput.value = line;
+                            }
+                            if (lineLabel) {
+                                lineLabel.textContent = `Строка ${line}`;
+                            }
+                            if (commentArea) {
+                                commentArea.focus();
+                            }
+                        }
+                    });
+
+                    const comments = @Html.Raw(JsonSerializer.Serialize(Model.Comments
+                        .Where(c => c.LineNumber.HasValue)
+                        .Select(c => new
+                        {
+                            line = c.LineNumber,
+                            text = c.Text,
+                            author = c.Reviewer?.Login,
+                            created = c.CreatedAt.ToLocalTime().ToString("g")
+                        })));
+
+                    if (Array.isArray(comments) && comments.length) {
+                        const decorations = comments.map(c => ({
+                            range: new monaco.Range(c.line, 1, c.line, 1),
+                            options: {
+                                isWholeLine: true,
+                                glyphMarginClassName: 'monaco-comment-glyph',
+                                glyphMarginHoverMessage: { value: `${c.author ?? 'Комментарий'} (${c.created})\\n${c.text}` },
+                                className: 'monaco-comment-line'
+                            }
+                        }));
+
+                        editor.deltaDecorations([], decorations);
+                    }
+                }, function () {
+                    showFallback();
+                });
+            })
+            .catch(showFallback);
+    })();
+</script>

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -24,12 +26,15 @@ namespace WebAppServer.Pages.Tasks
 
         public Models.Models.Task? Task { get; set; }
         public List<Answer> UserAnswers { get; set; } = new();
+        public Dictionary<int, List<ReviewComment>> ReviewComments { get; set; } = new();
 
         [BindProperty]
         public string NewAnswerText { get; set; } = string.Empty;
 
         [BindProperty]
         public IFormFile? NewAnswerFile { get; set; }
+
+        public IReadOnlyList<string> MonacoSupportedExtensions => MonacoSupport.MonacoSupportedExtensions;
 
         private bool CanModifyAnswer(Answer answer, string login)
         {
@@ -63,6 +68,13 @@ namespace WebAppServer.Pages.Tasks
                     .Include(a => a.Student)
                     .Where(a => a.Task!.Id == id && a.Student!.Id == user.Id)
                     .ToListAsync();
+
+                var answerIds = UserAnswers.Select(a => a.Id).ToList();
+                ReviewComments = await _db.ReviewComments
+                    .Include(c => c.Reviewer)
+                    .Where(c => answerIds.Contains(c.Answer!.Id))
+                    .GroupBy(c => c.Answer!.Id)
+                    .ToDictionaryAsync(g => g.Key, g => g.OrderByDescending(c => c.CreatedAt).ToList());
             }
 
             return Page();

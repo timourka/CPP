@@ -1,5 +1,6 @@
 ﻿@page "{id:int}"
 @model WebAppServer.Pages.Tasks.AnswersModel
+@using System.Linq
 @{
     ViewData["Title"] = "Ответы на задание: " + Model.Task?.Name;
 }
@@ -24,6 +25,7 @@ else
                 <th>Файл</th>
                 <th>Статус</th>
                 <th>Оценка</th>
+                <th>Комментарии ревью</th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -52,6 +54,29 @@ else
                     </td>
                     <td>@((a.Grade >= 0) ? a.Grade : "-")</td>
                     <td>
+                        @if (Model.ReviewComments.TryGetValue(a.Id, out var comments) && comments.Count > 0)
+                        {
+                            <ul class="mb-0">
+                                @foreach (var comment in comments.Take(3))
+                                {
+                                    <li>
+                                        <strong>@(comment.LineNumber.HasValue ? $"Строка {comment.LineNumber}" : "Общее замечание"):</strong>
+                                        <span>@comment.Text</span>
+                                    </li>
+                                }
+                            </ul>
+
+                            @if (comments.Count > 3)
+                            {
+                                <div class="text-muted">И ещё @(comments.Count - 3) комментариев</div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Нет комментариев</span>
+                        }
+                    </td>
+                    <td>
                         @if (canModify)
                         {
                             <form method="post" asp-page-handler="Delete" class="d-inline">
@@ -63,6 +88,7 @@ else
                                 <input type="hidden" name="answerId" value="@a.Id" />
                                 <input type="text" name="newText" class="form-control d-inline w-auto" placeholder="Новый текст" />
                                 <input type="file" name="newFile" class="form-control d-inline w-auto" />
+                                <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions)</div>
                                 <button class="btn btn-sm btn-warning">Редактировать</button>
                             </form>
 
@@ -96,6 +122,7 @@ else
     <div class="mb-3">
         <label class="form-label">Файл</label>
         <input type="file" asp-for="NewAnswerFile" class="form-control" />
+        <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions)</div>
     </div>
     <button class="btn btn-primary" type="submit">Создать</button>
 </form>
