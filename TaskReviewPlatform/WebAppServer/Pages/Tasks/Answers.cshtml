@@ -1,5 +1,6 @@
 ﻿@page "{id:int}"
 @model WebAppServer.Pages.Tasks.AnswersModel
+@using System.Linq
 @{
     ViewData["Title"] = "Ответы на задание: " + Model.Task?.Name;
 }
@@ -24,6 +25,7 @@ else
                 <th>Файл</th>
                 <th>Статус</th>
                 <th>Оценка</th>
+                <th>Комментарии ревью</th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -51,6 +53,29 @@ else
                         }
                     </td>
                     <td>@((a.Grade >= 0) ? a.Grade : "-")</td>
+                    <td>
+                        @if (Model.ReviewComments.TryGetValue(a.Id, out var comments) && comments.Count > 0)
+                        {
+                            <ul class="mb-0">
+                                @foreach (var comment in comments.Take(3))
+                                {
+                                    <li>
+                                        <strong>@(comment.LineNumber.HasValue ? $"Строка {comment.LineNumber}" : "Общее замечание"):</strong>
+                                        <span>@comment.Text</span>
+                                    </li>
+                                }
+                            </ul>
+
+                            @if (comments.Count > 3)
+                            {
+                                <div class="text-muted">И ещё @(comments.Count - 3) комментариев</div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Нет комментариев</span>
+                        }
+                    </td>
                     <td>
                         @if (canModify)
                         {
