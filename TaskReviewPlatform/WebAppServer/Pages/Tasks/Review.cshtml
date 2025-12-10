@@ -68,6 +68,9 @@
         <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title">Просмотр файла</h5>
+                <div class="alert alert-info small mb-3">
+                    <strong>Поддерживаемые форматы Monaco:</strong> @string.Join(", ", Model.MonacoSupportedExtensions)
+                </div>
                 @if (!string.IsNullOrEmpty(Model.FileError))
                 {
                     <div class="alert alert-warning">@Model.FileError</div>

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -76,6 +77,8 @@ namespace WebAppServer.Pages.Tasks
         public string ActiveFileLanguage { get; set; } = "plaintext";
 
         public List<string> ActiveFileLines { get; set; } = new();
+
+        public IReadOnlyList<string> MonacoSupportedExtensions { get; } = MonacoLanguageByExtension.Keys.OrderBy(e => e).ToList();
 
         public string? FileError { get; set; }
 
