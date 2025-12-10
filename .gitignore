@@ -1,5 +1,7 @@
 ~$*.docx
 .ReviewSystem.vpp.lck
+TaskReviewPlatform/WebAppServer/wwwroot/uploads/*
+
 # Visual Studio
 .vs/
 *.user
