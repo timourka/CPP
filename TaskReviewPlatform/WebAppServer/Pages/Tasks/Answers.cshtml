@@ -22,7 +22,7 @@ else
         <thead>
             <tr>
                 <th>Описание</th>
-                <th>Файл</th>
+                <th>Файлы</th>
                 <th>Статус</th>
                 <th>Оценка</th>
                 <th>Комментарии ревью</th>
@@ -36,13 +36,22 @@ else
                 <tr>
                     <td>@a.Text</td>
                     <td>
-                        @if (!string.IsNullOrEmpty(a.FilePath))
+                        @if (a.Files?.Count > 0)
+                        {
+                            <ul class="mb-0">
+                                @foreach (var file in a.Files)
+                                {
+                                    <li><a href="@file.RelativePath" target="_blank">@file.FileName</a></li>
+                                }
+                            </ul>
+                        }
+                        else if (!string.IsNullOrEmpty(a.FilePath))
                         {
                             <a href="@a.FilePath" target="_blank">@(string.IsNullOrEmpty(a.FileName) ? "Скачать файл" : a.FileName)</a>
                         }
                         else
                         {
-                            <span class="text-muted">Файл не прикреплен</span>
+                            <span class="text-muted">Файлы не прикреплены</span>
                         }
                     </td>
                     <td>
@@ -87,8 +96,8 @@ else
                             <form method="post" asp-page-handler="Edit" class="d-inline" enctype="multipart/form-data">
                                 <input type="hidden" name="answerId" value="@a.Id" />
                                 <input type="text" name="newText" class="form-control d-inline w-auto" placeholder="Новый текст" />
-                                <input type="file" name="newFile" class="form-control d-inline w-auto" />
-                                <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions)</div>
+                                <input type="file" name="newFiles" class="form-control d-inline w-auto" multiple />
+                                <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions). Добавьте один или несколько файлов для замены текущих вложений.</div>
                                 <button class="btn btn-sm btn-warning">Редактировать</button>
                             </form>
 
@@ -120,9 +129,9 @@ else
         <textarea asp-for="NewAnswerText" class="form-control" placeholder="Опишите решение"></textarea>
     </div>
     <div class="mb-3">
-        <label class="form-label">Файл</label>
-        <input type="file" asp-for="NewAnswerFile" class="form-control" />
-        <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions)</div>
+        <label class="form-label">Файлы</label>
+        <input type="file" asp-for="NewAnswerFiles" class="form-control" multiple />
+        <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions). Можно прикрепить несколько файлов.</div>
     </div>
     <button class="btn btn-primary" type="submit">Создать</button>
 </form>

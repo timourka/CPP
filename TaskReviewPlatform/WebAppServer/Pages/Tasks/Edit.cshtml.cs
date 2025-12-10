@@ -36,6 +36,7 @@ namespace WebAppServer.Pages.Tasks
 
             Answers = await _db.Answers
                 .Include(a => a.Student)
+                .Include(a => a.Files)
                 .Where(a => a.Task!.Id == id)
                 .ToListAsync();
 

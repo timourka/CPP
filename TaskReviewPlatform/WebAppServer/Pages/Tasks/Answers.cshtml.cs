@@ -32,7 +32,7 @@ namespace WebAppServer.Pages.Tasks
         public string NewAnswerText { get; set; } = string.Empty;
 
         [BindProperty]
-        public IFormFile? NewAnswerFile { get; set; }
+        public List<IFormFile> NewAnswerFiles { get; set; } = new();
 
         public IReadOnlyList<string> MonacoSupportedExtensions => MonacoSupport.MonacoSupportedExtensions;
 
@@ -66,6 +66,7 @@ namespace WebAppServer.Pages.Tasks
             {
                 UserAnswers = await _db.Answers
                     .Include(a => a.Student)
+                    .Include(a => a.Files)
                     .Where(a => a.Task!.Id == id && a.Student!.Id == user.Id)
                     .ToListAsync();
 
@@ -96,20 +97,26 @@ namespace WebAppServer.Pages.Tasks
             if (user == null)
                 return Forbid();
 
-            var filePath = await SaveFileAsync(NewAnswerFile);
+            var files = await SaveFilesAsync(NewAnswerFiles);
 
             var answer = new Answer
             {
                 Text = NewAnswerText.Trim(),
                 Student = user,
                 Task = Task,
-                FilePath = filePath,
-                FileName = NewAnswerFile?.FileName,
+                FilePath = files.FirstOrDefault()?.RelativePath,
+                FileName = files.FirstOrDefault()?.FileName,
+                Files = files,
                 Grade = -1,
                 Status = "Черновик",
                 ReviewRequested = false,
                 AllowResubmit = false
             };
+
+            foreach (var file in files)
+            {
+                file.Answer = answer;
+            }
 
             _db.Answers.Add(answer);
             await _db.SaveChangesAsync();
@@ -131,18 +138,24 @@ namespace WebAppServer.Pages.Tasks
             if (!CanModifyAnswer(answer, login))
                 return Forbid();
 
+            foreach (var f in answer.Files)
+            {
+                DeleteFileIfExists(f.RelativePath);
+            }
             DeleteFileIfExists(answer.FilePath);
+            _db.AnswerFiles.RemoveRange(answer.Files);
             _db.Answers.Remove(answer);
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
         }
 
-        public async Task<IActionResult> OnPostEditAsync(int answerId, string newText, IFormFile? newFile)
+        public async Task<IActionResult> OnPostEditAsync(int answerId, string newText, List<IFormFile>? newFiles)
         {
             var answer = await _db.Answers
                 .Include(a => a.Student)
                 .Include(a => a.Task)
+                .Include(a => a.Files)
                 .FirstOrDefaultAsync(a => a.Id == answerId);
 
             if (answer == null)
@@ -157,11 +170,28 @@ namespace WebAppServer.Pages.Tasks
             answer.ReviewRequested = false;
             answer.Grade = -1;
 
-            if (newFile != null && newFile.Length > 0)
+            if (newFiles != null && newFiles.Any(f => f.Length > 0))
             {
-                DeleteFileIfExists(answer.FilePath);
-                answer.FilePath = await SaveFileAsync(newFile);
-                answer.FileName = newFile.FileName;
+                _db.AnswerFiles.RemoveRange(answer.Files);
+
+                foreach (var f in answer.Files)
+                {
+                    DeleteFileIfExists(f.RelativePath);
+                }
+
+                answer.Files.Clear();
+
+                var savedFiles = await SaveFilesAsync(newFiles.Where(f => f.Length > 0));
+                answer.Files.AddRange(savedFiles);
+
+                foreach (var file in savedFiles)
+                {
+                    file.Answer = answer;
+                }
+
+                var firstFile = savedFiles.FirstOrDefault();
+                answer.FilePath = firstFile?.RelativePath;
+                answer.FileName = firstFile?.FileName;
             }
             await _db.SaveChangesAsync();
 
@@ -192,21 +222,34 @@ namespace WebAppServer.Pages.Tasks
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
         }
 
-        private async Task<string?> SaveFileAsync(IFormFile? file)
+        private async Task<List<AnswerFile>> SaveFilesAsync(IEnumerable<IFormFile> files)
         {
-            if (file == null || file.Length == 0)
-                return null;
+            var saved = new List<AnswerFile>();
 
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
             Directory.CreateDirectory(uploadsFolder);
 
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
+            foreach (var file in files)
+            {
+                if (file == null || file.Length == 0)
+                {
+                    continue;
+                }
 
-            await using var stream = System.IO.File.Create(filePath);
-            await file.CopyToAsync(stream);
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
 
-            return $"/uploads/{fileName}";
+                await using var stream = System.IO.File.Create(filePath);
+                await file.CopyToAsync(stream);
+
+                saved.Add(new AnswerFile
+                {
+                    FileName = file.FileName,
+                    RelativePath = $"/uploads/{fileName}"
+                });
+            }
+
+            return saved;
         }
 
         private void DeleteFileIfExists(string? relativePath)

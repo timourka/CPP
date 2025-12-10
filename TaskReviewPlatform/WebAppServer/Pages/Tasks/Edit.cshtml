@@ -32,11 +32,10 @@ else
             <tr>
                 <th>Студент</th>
                 <th>Описание</th>
-                <th>Файл</th>
+                <th>Файлы</th>
                 <th>Статус</th>
                 <th>Оценка</th>
                 <th>Ревью</th>
-                <th>Действия</th>
             </tr>
         </thead>
         <tbody>
@@ -46,13 +45,22 @@ else
                     <td>@a.Student?.Login</td>
                     <td>@a.Text</td>
                     <td>
-                        @if (!string.IsNullOrEmpty(a.FilePath))
+                        @if (a.Files?.Count > 0)
+                        {
+                            <ul class="mb-0">
+                                @foreach (var file in a.Files)
+                                {
+                                    <li><a href="@file.RelativePath" target="_blank">@file.FileName</a></li>
+                                }
+                            </ul>
+                        }
+                        else if (!string.IsNullOrEmpty(a.FilePath))
                         {
                             <a href="@a.FilePath" target="_blank">@(string.IsNullOrEmpty(a.FileName) ? "Скачать файл" : a.FileName)</a>
                         }
                         else
                         {
-                            <span class="text-muted">Файл не прикреплен</span>
+                            <span class="text-muted">Файлы не прикреплены</span>
                         }
                     </td>
                     <td>
@@ -70,20 +78,6 @@ else
                         <div class="text-muted">
                             Комментариев: @(Model.ReviewCommentsCount.TryGetValue(a.Id, out var count) ? count : 0)
                         </div>
-                    </td>
-                    <td>
-                        <form method="post" asp-page-handler="CheckAnswer" class="d-inline">
-                            <input type="hidden" name="answerId" value="@a.Id" />
-                            <button class="btn btn-sm btn-primary">Проверить</button>
-                        </form>
-
-                        @if (a.Status == "Проверено" && !a.AllowResubmit)
-                        {
-                            <form method="post" asp-page-handler="AllowRetry" class="d-inline ms-1">
-                                <input type="hidden" name="answerId" value="@a.Id" />
-                                <button class="btn btn-sm btn-secondary">Разрешить повтор</button>
-                            </form>
-                        }
                     </td>
                 </tr>
             }
