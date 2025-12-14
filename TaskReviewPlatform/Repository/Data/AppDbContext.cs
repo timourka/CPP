@@ -11,6 +11,7 @@ namespace Repository.Data
         public DbSet<Answer> Answers { get; set; }
         public DbSet<AnswerFile> AnswerFiles { get; set; }
         public DbSet<ReviewComment> ReviewComments { get; set; }
+        public DbSet<ReviewRequest> ReviewRequests { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)

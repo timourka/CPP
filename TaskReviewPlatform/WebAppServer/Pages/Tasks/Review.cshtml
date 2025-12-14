@@ -45,21 +45,70 @@
             </div>
         </div>
 
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Рецензенты</h5>
+                @if (Model.ReviewRequests.Count == 0)
+                {
+                    <div class="text-muted">Рецензенты еще не назначены.</div>
+                }
+                else
+                {
+                    <ul class="list-group mb-3">
+                        @foreach (var rr in Model.ReviewRequests)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@rr.Reviewer?.Login</span>
+                                <span class="badge @(rr.Completed ? "bg-success" : "bg-secondary")">@(rr.Completed ? "Завершено" : "В процессе")</span>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                @if (Model.CanFinalize)
+                {
+                    <form method="post" asp-page-handler="AddReviewer">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <div class="mb-3">
+                            <label class="form-label">Добавить рецензента</label>
+                            <select asp-for="ReviewerLogin" class="form-select">
+                                <option value="">Выберите пользователя</option>
+                                @foreach (var u in Model.PotentialReviewers)
+                                {
+                                    <option value="@u.Login">@u.Login (@u.Name)</option>
+                                }
+                            </select>
+                            <div class="form-text">Рецензенты выбираются из участников курса (кроме автора ответа).</div>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Назначить</button>
+                    </form>
+                }
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Итоги проверки</h5>
-                <form method="post" asp-page-handler="Finalize">
-                    <div class="mb-3">
-                        <label class="form-label">Оценка</label>
-                        <input asp-for="Grade" type="number" class="form-control" min="0" max="100" />
-                    </div>
-                    <div class="form-check mb-3">
-                        <input asp-for="AllowResubmit" class="form-check-input" />
-                        <label class="form-check-label" for="AllowResubmit">Разрешить повторную отправку</label>
-                    </div>
-                    <button type="submit" class="btn btn-success">Сохранить результат</button>
-                    <a asp-page="/Tasks/Edit" asp-route-id="@Model.Answer.Task?.Id" class="btn btn-secondary ms-2">Назад к ответам</a>
-                </form>
+                @if (Model.CanFinalize)
+                {
+                    <form method="post" asp-page-handler="Finalize">
+                        <div class="mb-3">
+                            <label class="form-label">Оценка</label>
+                            <input asp-for="Grade" type="number" class="form-control" min="0" max="100" />
+                        </div>
+                        <div class="form-check mb-3">
+                            <input asp-for="AllowResubmit" class="form-check-input" />
+                            <label class="form-check-label" for="AllowResubmit">Разрешить повторную отправку</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">Сохранить результат</button>
+                        <a asp-page="/Tasks/Edit" asp-route-id="@Model.Answer.Task?.Id" class="btn btn-secondary ms-2">Назад к ответам</a>
+                    </form>
+                }
+                else
+                {
+                    <p class="mb-1">Оценка: @(Model.Answer.Grade >= 0 ? Model.Answer.Grade : 0)</p>
+                    <p class="text-muted mb-0">Только авторы курса могут финализировать проверку.</p>
+                }
             </div>
         </div>
     </div>

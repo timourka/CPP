@@ -102,6 +102,14 @@ namespace WebAppServer.Pages.Tasks
             answer.Status = "Проверено";
             answer.ReviewRequested = false;
             answer.AllowResubmit = false;
+
+            var requests = await _db.ReviewRequests
+                .Where(r => r.Answer!.Id == answerId)
+                .ToListAsync();
+            foreach (var r in requests)
+            {
+                r.Completed = true;
+            }
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });
@@ -123,6 +131,14 @@ namespace WebAppServer.Pages.Tasks
             answer.Status = "Разрешена повторная отправка";
             answer.ReviewRequested = false;
             answer.Grade = -1;
+
+            var requests = await _db.ReviewRequests
+                .Where(r => r.Answer!.Id == answerId)
+                .ToListAsync();
+            foreach (var r in requests)
+            {
+                r.Completed = false;
+            }
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });

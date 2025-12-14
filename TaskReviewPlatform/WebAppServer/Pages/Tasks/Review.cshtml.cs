@@ -57,6 +57,15 @@ namespace WebAppServer.Pages.Tasks
         [BindProperty]
         public string CommentText { get; set; } = string.Empty;
 
+        [BindProperty]
+        public string? ReviewerLogin { get; set; }
+
+        public List<User> PotentialReviewers { get; set; } = new();
+
+        public List<ReviewRequest> ReviewRequests { get; set; } = new();
+
+        public bool CanFinalize { get; set; }
+
         public async Task<IActionResult> OnGetAsync(int answerId, string? file)
         {
             var loadResult = await LoadAnswerAsync(answerId);
@@ -67,6 +76,9 @@ namespace WebAppServer.Pages.Tasks
 
             Grade = Answer!.Grade >= 0 ? Answer.Grade : 0;
             AllowResubmit = Answer.AllowResubmit;
+
+            await LoadReviewRequestsAsync(answerId);
+            await LoadPotentialReviewersAsync();
 
             BuildFiles();
             ActiveFilePath = string.IsNullOrWhiteSpace(file) ? Files.FirstOrDefault()?.RelativePath : file;
@@ -88,6 +100,8 @@ namespace WebAppServer.Pages.Tasks
                 return loadResult;
             }
 
+            await LoadReviewRequestsAsync(answerId);
+            await LoadPotentialReviewersAsync();
             BuildFiles();
 
             if (!string.IsNullOrWhiteSpace(ActiveFilePath))
@@ -157,12 +171,86 @@ namespace WebAppServer.Pages.Tasks
                 return loadResult;
             }
 
+            if (!CanFinalize)
+            {
+                return Forbid();
+            }
+
             Answer!.Grade = Grade;
             Answer.Status = "Проверено";
             Answer.ReviewRequested = false;
             Answer.AllowResubmit = AllowResubmit;
 
+            await LoadReviewRequestsAsync(answerId);
+            foreach (var rr in ReviewRequests)
+            {
+                rr.Completed = true;
+            }
+
             await _db.SaveChangesAsync();
+            return RedirectToPage(new { answerId });
+        }
+
+        public async Task<IActionResult> OnPostAddReviewerAsync(int answerId)
+        {
+            var loadResult = await LoadAnswerAsync(answerId);
+            if (loadResult != null)
+            {
+                return loadResult;
+            }
+
+            if (!CanFinalize)
+            {
+                return Forbid();
+            }
+
+            await LoadReviewRequestsAsync(answerId);
+            await LoadPotentialReviewersAsync();
+            BuildFiles();
+
+            if (string.IsNullOrWhiteSpace(ActiveFilePath))
+            {
+                ActiveFilePath = Files.FirstOrDefault()?.RelativePath;
+            }
+
+            if (!string.IsNullOrWhiteSpace(ActiveFilePath))
+            {
+                LoadFileContent(ActiveFilePath);
+            }
+
+            if (string.IsNullOrWhiteSpace(ReviewerLogin))
+            {
+                ModelState.AddModelError(string.Empty, "Укажите логин рецензента");
+                await LoadCommentsAsync(answerId, ActiveFileName);
+                return Page();
+            }
+
+            var reviewer = PotentialReviewers.FirstOrDefault(u => string.Equals(u.Login, ReviewerLogin.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (reviewer == null)
+            {
+                ModelState.AddModelError(string.Empty, "Рецензент не найден среди участников курса");
+                await LoadCommentsAsync(answerId, ActiveFileName);
+                return Page();
+            }
+
+            if (ReviewRequests.Any(r => r.Reviewer?.Id == reviewer.Id))
+            {
+                ModelState.AddModelError(string.Empty, "Этот рецензент уже назначен на ответ");
+                await LoadCommentsAsync(answerId, ActiveFileName);
+                return Page();
+            }
+
+            var request = new ReviewRequest
+            {
+                Answer = Answer,
+                Reviewer = reviewer,
+                CreatedAt = DateTime.UtcNow,
+                Completed = Answer!.Status == "Проверено"
+            };
+
+            _db.ReviewRequests.Add(request);
+            await _db.SaveChangesAsync();
+
             return RedirectToPage(new { answerId });
         }
 
@@ -171,7 +259,12 @@ namespace WebAppServer.Pages.Tasks
             Answer = await _db.Answers
                 .Include(a => a.Student)
                 .Include(a => a.Files)
-                .Include(a => a.Task)!.ThenInclude(t => t.Course)!.ThenInclude(c => c.Avtors)
+                .Include(a => a.Task)!
+                    .ThenInclude(t => t.Course)!
+                        .ThenInclude(c => c.Avtors)
+                .Include(a => a.Task)!
+                    .ThenInclude(t => t.Course)!
+                        .ThenInclude(c => c.Participants)
                 .FirstOrDefaultAsync(a => a.Id == answerId);
 
             if (Answer == null)
@@ -180,10 +273,16 @@ namespace WebAppServer.Pages.Tasks
             }
 
             var login = User.Identity!.Name;
-            if (!Answer.Task!.Course!.Avtors.Any(a => a.Login == login))
+            var isCourseAuthor = Answer.Task!.Course!.Avtors.Any(a => a.Login == login);
+            var isAssignedReviewer = await _db.ReviewRequests
+                .AnyAsync(r => r.Answer!.Id == answerId && r.Reviewer!.Login == login);
+
+            if (!isCourseAuthor && !isAssignedReviewer)
             {
                 return Forbid();
             }
+
+            CanFinalize = isCourseAuthor;
 
             return null;
         }
@@ -267,6 +366,30 @@ namespace WebAppServer.Pages.Tasks
             {
                 FileError = "Не удалось прочитать файл.";
             }
+        }
+
+        private async Task LoadReviewRequestsAsync(int answerId)
+        {
+            ReviewRequests = await _db.ReviewRequests
+                .Include(r => r.Reviewer)
+                .Where(r => r.Answer!.Id == answerId)
+                .OrderBy(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        private async Task LoadPotentialReviewersAsync()
+        {
+            var allowedIds = Answer!.Task!.Course!.Participants
+                .Select(p => p.Id)
+                .Concat(Answer.Task.Course.Avtors.Select(a => a.Id))
+                .Where(id => id != Answer.Student?.Id)
+                .Distinct()
+                .ToList();
+
+            PotentialReviewers = await _db.Users
+                .Where(u => allowedIds.Contains(u.Id))
+                .OrderBy(u => u.Login)
+                .ToListAsync();
         }
 
         public class ReviewFile

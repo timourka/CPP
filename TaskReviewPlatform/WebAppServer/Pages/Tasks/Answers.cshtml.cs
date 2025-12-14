@@ -217,6 +217,14 @@ namespace WebAppServer.Pages.Tasks
             answer.AllowResubmit = false;
             answer.Grade = -1;
 
+            var requests = await _db.ReviewRequests
+                .Where(r => r.Answer!.Id == answerId)
+                .ToListAsync();
+            foreach (var r in requests)
+            {
+                r.Completed = false;
+            }
+
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
