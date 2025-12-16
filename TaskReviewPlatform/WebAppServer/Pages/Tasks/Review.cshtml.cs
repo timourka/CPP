@@ -249,6 +249,12 @@ namespace WebAppServer.Pages.Tasks
             };
 
             _db.ReviewRequests.Add(request);
+
+            if (!Answer.ReviewRequested && Answer.Status != "Проверено")
+            {
+                Answer.ReviewRequested = true;
+                Answer.Status = "Ожидает проверки";
+            }
             await _db.SaveChangesAsync();
 
             return RedirectToPage(new { answerId });

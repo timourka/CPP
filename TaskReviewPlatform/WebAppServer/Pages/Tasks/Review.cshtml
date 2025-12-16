@@ -48,6 +48,11 @@
         <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title">Рецензенты</h5>
+                <div class="alert alert-info small">
+                    <strong>Как назначить рецензента?</strong> Откройте ответ через эту страницу и выберите участника курса в
+                    выпадающем списке ниже. Запрос сразу появится у выбранного пользователя на странице «Запросы на
+                    рецензию».
+                </div>
                 @if (Model.ReviewRequests.Count == 0)
                 {
                     <div class="text-muted">Рецензенты еще не назначены.</div>
