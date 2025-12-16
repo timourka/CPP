@@ -282,13 +282,14 @@ namespace WebAppServer.Pages.Tasks
             var isCourseAuthor = Answer.Task!.Course!.Avtors.Any(a => a.Login == login);
             var isAssignedReviewer = await _db.ReviewRequests
                 .AnyAsync(r => r.Answer!.Id == answerId && r.Reviewer!.Login == login);
+            var isAdmin = User.IsInRole("Admin");
 
-            if (!isCourseAuthor && !isAssignedReviewer)
+            if (!isCourseAuthor && !isAssignedReviewer && !isAdmin)
             {
                 return Forbid();
             }
 
-            CanFinalize = isCourseAuthor;
+            CanFinalize = isCourseAuthor || isAdmin;
 
             return null;
         }
