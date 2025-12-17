@@ -9,10 +9,11 @@
         <li><a href="/Admin/Panel">Админ панель</a></li>
     }
 
+    <li><a asp-page="/ReviewRequests">Запросы на рецензию</a></li>
+
     @if (User.Identity?.IsAuthenticated ?? false)
     {
         <li><a asp-page="/Courses">Список курсов</a></li>
         <li><a asp-page="/Answers">Мои ответы</a></li>
-        <li><a asp-page="/ReviewRequests">Запросы на рецензию</a></li>
     }
 </ul>

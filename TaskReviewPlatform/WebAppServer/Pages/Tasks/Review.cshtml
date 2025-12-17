@@ -70,7 +70,7 @@
                     </ul>
                 }
 
-                @if (Model.CanFinalize)
+                @if (Model.CanManageReviewers)
                 {
                     <form method="post" asp-page-handler="AddReviewer">
                         <div asp-validation-summary="All" class="text-danger"></div>
@@ -87,6 +87,10 @@
                         </div>
                         <button class="btn btn-primary" type="submit">Назначить</button>
                     </form>
+                }
+                else
+                {
+                    <div class="text-muted">Назначать рецензентов могут только авторы курса или администраторы.</div>
                 }
             </div>
         </div>

@@ -65,6 +65,7 @@ namespace WebAppServer.Pages.Tasks
         public List<ReviewRequest> ReviewRequests { get; set; } = new();
 
         public bool CanFinalize { get; set; }
+        public bool CanManageReviewers { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int answerId, string? file)
         {
@@ -171,7 +172,7 @@ namespace WebAppServer.Pages.Tasks
                 return loadResult;
             }
 
-            if (!CanFinalize)
+            if (!CanManageReviewers)
             {
                 return Forbid();
             }
@@ -290,11 +291,12 @@ namespace WebAppServer.Pages.Tasks
             }
 
             CanFinalize = isCourseAuthor || isAdmin;
+            CanManageReviewers = isCourseAuthor || isAdmin;
 
             return null;
         }
 
-        private async System.Threading.Tasks.Task LoadCommentsAsync(int answerId, string? fileName)
+        private async Task LoadCommentsAsync(int answerId, string? fileName)
         {
             var query = _db.ReviewComments
                 .Include(c => c.Reviewer)
