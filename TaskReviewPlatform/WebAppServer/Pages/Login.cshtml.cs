@@ -23,7 +23,7 @@ namespace WebAppServer.Pages
         [BindProperty]
         public string Password { get; set; }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostAsync()
         {
             // 🔥 1. Проверяем хардкоженного админа
             if (Login == "admin" && Password == "admin")

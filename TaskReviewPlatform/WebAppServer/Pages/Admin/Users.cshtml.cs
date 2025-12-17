@@ -41,7 +41,7 @@ namespace WebAppServer.Pages.Admin
         }
 
         // Создание или обновление пользователя
-        public async Task<IActionResult> OnPostAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
                 return Page();
@@ -68,7 +68,7 @@ namespace WebAppServer.Pages.Admin
         }
 
         // Удаление пользователя
-        public async Task<IActionResult> OnPostDeleteAsync(int id)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostDeleteAsync(int id)
         {
             var user = await _db.Users.FindAsync(id);
             if (user != null)

@@ -15,30 +15,30 @@ namespace Repository
             _set = context.Set<T>();
         }
 
-        public async Task<T> GetById(int id) =>
+        public async System.Threading.Tasks.Task<T> GetById(int id) =>
             await _set.FirstOrDefaultAsync(x => x.Id == id);
 
-        public async Task<List<T>> GetAll() =>
+        public async System.Threading.Tasks.Task<List<T>> GetAll() =>
             await _set.ToListAsync();
 
-        public async Task Add(T entity)
+        public async System.Threading.Tasks.Task Add(T entity)
         {
             await _set.AddAsync(entity);
         }
 
-        public Task Update(T entity)
+        public System.Threading.Tasks.Task Update(T entity)
         {
             _set.Update(entity);
-            return Task.CompletedTask;
+            return System.Threading.Tasks.Task.CompletedTask;
         }
 
-        public Task Delete(T entity)
+        public System.Threading.Tasks.Task Delete(T entity)
         {
             _set.Remove(entity);
-            return Task.CompletedTask;
+            return System.Threading.Tasks.Task.CompletedTask;
         }
 
-        public async Task Save()
+        public async System.Threading.Tasks.Task Save()
         {
             await _context.SaveChangesAsync();
         }

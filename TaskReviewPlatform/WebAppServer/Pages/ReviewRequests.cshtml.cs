@@ -18,7 +18,7 @@ namespace WebAppServer.Pages
 
         public List<ReviewRequest> Requests { get; set; } = new();
 
-        public async Task OnGetAsync()
+        public async System.Threading.Tasks.Task OnGetAsync()
         {
             var login = User.Identity!.Name;
 

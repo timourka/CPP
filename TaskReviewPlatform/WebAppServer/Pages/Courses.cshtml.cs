@@ -24,7 +24,7 @@ namespace WebAppServer.Pages
         [BindProperty]
         public string NewCourseDescription { get; set; } = string.Empty;
 
-        public async Task<IActionResult> OnGetAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity!.IsAuthenticated)
                 return RedirectToPage("/Login");
@@ -49,7 +49,7 @@ namespace WebAppServer.Pages
             return Page();
         }
 
-        public async Task<IActionResult> OnPostCreateAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostCreateAsync()
         {
             if (!User.Identity!.IsAuthenticated)
                 return RedirectToPage("/Login");

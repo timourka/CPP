@@ -67,7 +67,7 @@ namespace WebAppServer.Pages.Tasks
         public bool CanFinalize { get; set; }
         public bool CanManageReviewers { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int answerId, string? file)
+        public async System.Threading.Tasks.Task<IActionResult> OnGetAsync(int answerId, string? file)
         {
             var loadResult = await LoadAnswerAsync(answerId);
             if (loadResult != null)
@@ -93,7 +93,7 @@ namespace WebAppServer.Pages.Tasks
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAddCommentAsync(int answerId)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostAddCommentAsync(int answerId)
         {
             var loadResult = await LoadAnswerAsync(answerId);
             if (loadResult != null)
@@ -164,7 +164,7 @@ namespace WebAppServer.Pages.Tasks
             return RedirectToPage(new { answerId, file = ActiveFilePath });
         }
 
-        public async Task<IActionResult> OnPostFinalizeAsync(int answerId)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostFinalizeAsync(int answerId)
         {
             var loadResult = await LoadAnswerAsync(answerId);
             if (loadResult != null)
@@ -192,7 +192,7 @@ namespace WebAppServer.Pages.Tasks
             return RedirectToPage(new { answerId });
         }
 
-        public async Task<IActionResult> OnPostAddReviewerAsync(int answerId)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostAddReviewerAsync(int answerId)
         {
             var loadResult = await LoadAnswerAsync(answerId);
             if (loadResult != null)
@@ -261,7 +261,7 @@ namespace WebAppServer.Pages.Tasks
             return RedirectToPage(new { answerId });
         }
 
-        private async Task<IActionResult?> LoadAnswerAsync(int answerId)
+        private async System.Threading.Tasks.Task<IActionResult?> LoadAnswerAsync(int answerId)
         {
             Answer = await _db.Answers
                 .Include(a => a.Student)
@@ -296,7 +296,7 @@ namespace WebAppServer.Pages.Tasks
             return null;
         }
 
-        private async Task LoadCommentsAsync(int answerId, string? fileName)
+        private async System.Threading.Tasks.Task LoadCommentsAsync(int answerId, string? fileName)
         {
             var query = _db.ReviewComments
                 .Include(c => c.Reviewer)
@@ -377,7 +377,7 @@ namespace WebAppServer.Pages.Tasks
             }
         }
 
-        private async Task LoadReviewRequestsAsync(int answerId)
+        private async System.Threading.Tasks.Task LoadReviewRequestsAsync(int answerId)
         {
             ReviewRequests = await _db.ReviewRequests
                 .Include(r => r.Reviewer)
@@ -386,7 +386,7 @@ namespace WebAppServer.Pages.Tasks
                 .ToListAsync();
         }
 
-        private async Task LoadPotentialReviewersAsync()
+        private async System.Threading.Tasks.Task LoadPotentialReviewersAsync()
         {
             var allowedIds = Answer!.Task!.Course!.Participants
                 .Select(p => p.Id)

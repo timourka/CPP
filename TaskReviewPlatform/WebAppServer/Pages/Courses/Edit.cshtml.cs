@@ -29,7 +29,7 @@ namespace WebAppServer.Pages.Courses
         [BindProperty]
         public string NewTaskDescription { get; set; } = string.Empty;
 
-        public async Task<IActionResult> OnGetAsync(int id)
+        public async System.Threading.Tasks.Task<IActionResult> OnGetAsync(int id)
         {
             Course = await _db.Courses
                 .Include(c => c.Avtors)
@@ -48,7 +48,7 @@ namespace WebAppServer.Pages.Courses
         }
 
         // Обновление курса
-        public async Task<IActionResult> OnPostUpdateAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostUpdateAsync()
         {
             var course = await _db.Courses.FindAsync(Course.Id);
             if (course == null)
@@ -66,7 +66,7 @@ namespace WebAppServer.Pages.Courses
         }
 
         // Добавить участника по логину
-        public async Task<IActionResult> OnPostAddUserAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostAddUserAsync()
         {
             var course = await _db.Courses
                 .Include(c => c.Participants)
@@ -91,7 +91,7 @@ namespace WebAppServer.Pages.Courses
         }
 
         // Создать задание
-        public async Task<IActionResult> OnPostAddTaskAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostAddTaskAsync()
         {
             var course = await _db.Courses
                 .Include(c => c.Tasks)
@@ -118,7 +118,7 @@ namespace WebAppServer.Pages.Courses
         }
 
         // Удалить курс
-        public async Task<IActionResult> OnPostDeleteCourseAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostDeleteCourseAsync()
         {
             var course = await _db.Courses
                 .Include(c => c.Avtors)

@@ -19,7 +19,7 @@ namespace WebAppServer.Pages.Courses
 
         public Course? Course { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int id)
+        public async System.Threading.Tasks.Task<IActionResult> OnGetAsync(int id)
         {
             Course = await _db.Courses
                 .Include(c => c.Tasks)
