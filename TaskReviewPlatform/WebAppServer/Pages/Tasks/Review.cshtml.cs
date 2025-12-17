@@ -172,7 +172,7 @@ namespace WebAppServer.Pages.Tasks
                 return loadResult;
             }
 
-            if (!CanManageReviewers)
+            if (!CanFinalize)
             {
                 return Forbid();
             }
@@ -200,7 +200,7 @@ namespace WebAppServer.Pages.Tasks
                 return loadResult;
             }
 
-            if (!CanFinalize)
+            if (!CanManageReviewers)
             {
                 return Forbid();
             }
