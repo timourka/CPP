@@ -4,11 +4,11 @@ namespace Repository
 {
     public interface IRepository<T> where T : class, IModel
     {
-        Task<T> GetById(int id);
-        Task<List<T>> GetAll();
-        Task Add(T entity);
-        Task Update(T entity);
-        Task Delete(T entity);
-        Task Save();
+        System.Threading.Tasks.Task<T> GetById(int id);
+        System.Threading.Tasks.Task<List<T>> GetAll();
+        System.Threading.Tasks.Task Add(T entity);
+        System.Threading.Tasks.Task Update(T entity);
+        System.Threading.Tasks.Task Delete(T entity);
+        System.Threading.Tasks.Task Save();
     }
 }

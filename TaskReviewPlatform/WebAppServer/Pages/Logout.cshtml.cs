@@ -6,7 +6,7 @@ namespace WebAppServer.Pages
 {
     public class LogoutModel : PageModel
     {
-        public async Task OnGet()
+        public async System.Threading.Tasks.Task OnGet()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }

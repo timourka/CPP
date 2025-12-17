@@ -42,7 +42,7 @@ namespace WebAppServer.Pages.Tasks
                    (answer.Status != "Проверено" || answer.AllowResubmit);
         }
 
-        public async Task<IActionResult> OnGetAsync(int id)
+        public async System.Threading.Tasks.Task<IActionResult> OnGetAsync(int id)
         {
             Task = await _db.Tasks
                 .Include(t => t.Course)
@@ -81,7 +81,7 @@ namespace WebAppServer.Pages.Tasks
             return Page();
         }
 
-        public async Task<IActionResult> OnPostCreateAsync(int id)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostCreateAsync(int id)
         {
             Task = await _db.Tasks
                 .Include(t => t.Course)
@@ -124,7 +124,7 @@ namespace WebAppServer.Pages.Tasks
             return RedirectToPage("/Tasks/Answers", new { id = id });
         }
 
-        public async Task<IActionResult> OnPostDeleteAsync(int answerId)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostDeleteAsync(int answerId)
         {
             var answer = await _db.Answers
                 .Include(a => a.Student)
@@ -150,7 +150,7 @@ namespace WebAppServer.Pages.Tasks
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
         }
 
-        public async Task<IActionResult> OnPostEditAsync(int answerId, string newText, List<IFormFile>? newFiles)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostEditAsync(int answerId, string newText, List<IFormFile>? newFiles)
         {
             var answer = await _db.Answers
                 .Include(a => a.Student)
@@ -198,7 +198,7 @@ namespace WebAppServer.Pages.Tasks
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
         }
 
-        public async Task<IActionResult> OnPostRequestReviewAsync(int answerId)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostRequestReviewAsync(int answerId)
         {
             var answer = await _db.Answers
                 .Include(a => a.Student)
@@ -217,12 +217,20 @@ namespace WebAppServer.Pages.Tasks
             answer.AllowResubmit = false;
             answer.Grade = -1;
 
+            var requests = await _db.ReviewRequests
+                .Where(r => r.Answer!.Id == answerId)
+                .ToListAsync();
+            foreach (var r in requests)
+            {
+                r.Completed = false;
+            }
+
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Answers", new { id = answer.Task!.Id });
         }
 
-        private async Task<List<AnswerFile>> SaveFilesAsync(IEnumerable<IFormFile> files)
+        private async System.Threading.Tasks.Task<List<AnswerFile>> SaveFilesAsync(IEnumerable<IFormFile> files)
         {
             var saved = new List<AnswerFile>();
 

@@ -20,7 +20,7 @@ namespace WebAppServer.Pages.Tasks
         public List<Answer> Answers { get; set; } = new();
         public Dictionary<int, int> ReviewCommentsCount { get; set; } = new();
 
-        public async Task<IActionResult> OnGetAsync(int id)
+        public async System.Threading.Tasks.Task<IActionResult> OnGetAsync(int id)
         {
             Task = await _db.Tasks
                 .Include(t => t.Course)
@@ -49,7 +49,7 @@ namespace WebAppServer.Pages.Tasks
             return Page();
         }
 
-        public async Task<IActionResult> OnPostUpdateAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostUpdateAsync()
         {
             var t = await _db.Tasks.Include(x => x.Course).ThenInclude(c => c.Avtors)
                 .FirstOrDefaultAsync(x => x.Id == Task.Id);
@@ -68,7 +68,7 @@ namespace WebAppServer.Pages.Tasks
             return RedirectToPage("/Tasks/Edit", new { id = t.Id });
         }
 
-        public async Task<IActionResult> OnPostDeleteAsync()
+        public async System.Threading.Tasks.Task<IActionResult> OnPostDeleteAsync()
         {
             var t = await _db.Tasks.Include(x => x.Course).ThenInclude(c => c.Avtors)
                 .FirstOrDefaultAsync(x => x.Id == Task.Id);
@@ -86,7 +86,7 @@ namespace WebAppServer.Pages.Tasks
         }
 
         // Простейшая проверка ответов
-        public async Task<IActionResult> OnPostCheckAnswerAsync(int answerId)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostCheckAnswerAsync(int answerId)
         {
             var answer = await _db.Answers.Include(a => a.Task).ThenInclude(t => t.Course).ThenInclude(c => c.Avtors)
                 .FirstOrDefaultAsync(a => a.Id == answerId);
@@ -102,12 +102,20 @@ namespace WebAppServer.Pages.Tasks
             answer.Status = "Проверено";
             answer.ReviewRequested = false;
             answer.AllowResubmit = false;
+
+            var requests = await _db.ReviewRequests
+                .Where(r => r.Answer!.Id == answerId)
+                .ToListAsync();
+            foreach (var r in requests)
+            {
+                r.Completed = true;
+            }
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });
         }
 
-        public async Task<IActionResult> OnPostAllowRetryAsync(int answerId)
+        public async System.Threading.Tasks.Task<IActionResult> OnPostAllowRetryAsync(int answerId)
         {
             var answer = await _db.Answers.Include(a => a.Task).ThenInclude(t => t.Course).ThenInclude(c => c.Avtors)
                 .FirstOrDefaultAsync(a => a.Id == answerId);
@@ -123,6 +131,14 @@ namespace WebAppServer.Pages.Tasks
             answer.Status = "Разрешена повторная отправка";
             answer.ReviewRequested = false;
             answer.Grade = -1;
+
+            var requests = await _db.ReviewRequests
+                .Where(r => r.Answer!.Id == answerId)
+                .ToListAsync();
+            foreach (var r in requests)
+            {
+                r.Completed = false;
+            }
             await _db.SaveChangesAsync();
 
             return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });

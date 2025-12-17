@@ -25,8 +25,12 @@
                             <a class="nav-link text-dark" asp-page="/Index">Главная</a>
                         </li>
 
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-page="/ReviewRequests">Запросы на рецензию</a>
+                        </li>
+
                         @* Меню для всех авторизованных *@
-                        @if ((User.Identity?.IsAuthenticated ?? false) && !User.IsInRole("Admin"))
+                        @if (User.Identity?.IsAuthenticated ?? false)
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Courses">Список курсов</a>

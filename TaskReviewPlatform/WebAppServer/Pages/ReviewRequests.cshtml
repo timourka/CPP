@@ -1,0 +1,53 @@
+@page
+@model WebAppServer.Pages.ReviewRequestsModel
+@{
+    ViewData["Title"] = "Запросы на рецензию";
+}
+
+<h2>Запросы на рецензию</h2>
+<p class="text-muted">Вы видите только ответы, для которых вас назначили рецензентом.</p>
+
+@if (Model.Requests.Count == 0)
+{
+    <div class="alert alert-info">Запросов на рецензирование пока нет.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Курс</th>
+                <th>Задание</th>
+                <th>Студент</th>
+                <th>Статус ответа</th>
+                <th>Получено</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model.Requests)
+            {
+                <tr>
+                    <td>@r.Answer?.Task?.Course?.Name</td>
+                    <td>@r.Answer?.Task?.Name</td>
+                    <td>@r.Answer?.Student?.Login</td>
+                    <td>
+                        @r.Answer?.Status
+                        @if (r.Answer?.ReviewRequested == true)
+                        {
+                            <span class="badge bg-info ms-2">Запрошено ревью</span>
+                        }
+                        @if (r.Completed)
+                        {
+                            <span class="badge bg-success ms-1">Завершено</span>
+                        }
+                    </td>
+                    <td>@r.CreatedAt.ToLocalTime()</td>
+                    <td>
+                        <a class="btn btn-sm btn-primary" asp-page="/Tasks/Review" asp-route-answerId="@r.Answer?.Id">Открыть</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
