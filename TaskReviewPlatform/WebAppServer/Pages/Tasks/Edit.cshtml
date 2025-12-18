@@ -1,4 +1,4 @@
-﻿@page "{id:int}"
+@page "{id:int}"
 @model WebAppServer.Pages.Tasks.EditModel
 @{
     ViewData["Title"] = "Редактировать задание";
@@ -49,9 +49,11 @@
                     }
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button class="btn btn-primary flex-grow-1" type="submit">Применить</button>
-                <a class="btn btn-outline-secondary" asp-page="/Tasks/Edit" asp-route-id="@Model.Task.Id">Сбросить</a>
+            <div class="col-12 col-md-3 col-lg-2">
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary flex-fill" type="submit">Применить</button>
+                    <a class="btn btn-outline-secondary flex-fill" asp-page="/Tasks/Edit" asp-route-id="@Model.Task.Id">Сбросить</a>
+                </div>
             </div>
         </form>
     </div>
