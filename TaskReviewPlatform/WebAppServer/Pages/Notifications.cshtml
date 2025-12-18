@@ -1,0 +1,33 @@
+@page
+@model WebAppServer.Pages.NotificationsModel
+@{
+    ViewData["Title"] = "Уведомления";
+}
+
+<h2>Уведомления</h2>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="alert alert-info">Новых уведомлений нет.</div>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var notification in Model.Items)
+        {
+            <div class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <div class="fw-bold">@notification.Title</div>
+                    <div>@notification.Message</div>
+                    @if (notification.Answer != null)
+                    {
+                        <div class="mt-1">
+                            <a asp-page="/Tasks/Review" asp-route-answerId="@notification.Answer.Id" class="link-primary">Перейти к ответу</a>
+                        </div>
+                    }
+                </div>
+                <div class="text-muted small mt-2 mt-md-0">@notification.CreatedAt.ToLocalTime().ToString("g")</div>
+            </div>
+        }
+    </div>
+}

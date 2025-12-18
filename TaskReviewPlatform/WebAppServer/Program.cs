@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Repository;
 using Repository.Data;
+using WebAppServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,9 @@ builder.Services.AddAuthorization();
 
 // регистрируем твой репозиторий
 builder.Services.AddScoped<IRepository<User>, Repository<User>>();
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 var app = builder.Build();
 
