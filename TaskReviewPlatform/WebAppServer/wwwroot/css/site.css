@@ -39,6 +39,7 @@ body.app-body {
   flex: 1 0 auto;
   width: 100%;
   display: flex;
+  padding-bottom: 3rem;
 }
 
 .app-main .app-container {
