@@ -1,4 +1,4 @@
-﻿@page
+@page
 @using Microsoft.AspNetCore.Authorization
 @model IndexModel
 @{
@@ -9,15 +9,22 @@
     <h1 class="display-5 fw-bold">Добро пожаловать!</h1>
     <p class="lead mt-2">Управляйте рецензиями, отслеживайте уведомления и работайте с курсами в одном месте. Навигация сверху ведёт к основным разделам.</p>
     <div class="hero-actions d-flex flex-wrap align-items-center">
-        <a class="btn btn-primary btn-lg" asp-page="/ReviewRequests">Перейти к запросам</a>
-        @if (User.Identity?.IsAuthenticated ?? false)
+        @if (User.IsInRole("Admin"))
         {
-            <a class="btn btn-outline-primary btn-lg" asp-page="/Courses">Курсы</a>
-            <a class="btn btn-outline-secondary btn-lg" asp-page="/Notifications">Уведомления</a>
+            <a class="btn btn-primary btn-lg" asp-page="/Admin/Panel">Перейти в админ панель</a>
         }
         else
         {
-            <a class="btn btn-outline-primary btn-lg" asp-page="/Login">Войти</a>
+            <a class="btn btn-primary btn-lg" asp-page="/ReviewRequests">Перейти к запросам</a>
+            @if (User.Identity?.IsAuthenticated ?? false)
+            {
+                <a class="btn btn-outline-primary btn-lg" asp-page="/Courses">Курсы</a>
+                <a class="btn btn-outline-secondary btn-lg" asp-page="/Notifications">Уведомления</a>
+            }
+            else
+            {
+                <a class="btn btn-outline-primary btn-lg" asp-page="/Login">Войти</a>
+            }
         }
     </div>
 </section>

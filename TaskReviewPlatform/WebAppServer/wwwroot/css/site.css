@@ -38,6 +38,11 @@ body.app-body {
 .app-main {
   flex: 1 0 auto;
   width: 100%;
+  display: flex;
+}
+
+.app-main .app-container {
+  flex: 1 1 auto;
 }
 
 .app-header {
@@ -215,6 +220,8 @@ textarea.form-control {
 }
 
 .footer {
-  background: transparent;
-  position: static;
+  margin-top: auto;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  position: relative;
 }
