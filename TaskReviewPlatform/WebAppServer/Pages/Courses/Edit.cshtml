@@ -61,6 +61,21 @@
 
 <hr />
 
+<h4>Отчеты</h4>
+<p class="text-muted">Сформируйте простой количественный отчет по заданиям и проверкам курса.</p>
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <form method="post" asp-page-handler="DownloadReport" asp-route-id="@Model.Course.Id" class="d-inline">
+        <input type="hidden" name="format" value="pdf" />
+        <button class="btn btn-outline-primary" type="submit">Скачать отчет (PDF)</button>
+    </form>
+    <form method="post" asp-page-handler="DownloadReport" asp-route-id="@Model.Course.Id" class="d-inline">
+        <input type="hidden" name="format" value="excel" />
+        <button class="btn btn-outline-success" type="submit">Скачать отчет (Excel)</button>
+    </form>
+</div>
+
+<hr />
+
 <form method="post" asp-page-handler="DeleteCourse">
     <button class="btn btn-danger" onclick="return confirm('Удалить курс?');">Удалить курс</button>
 </form>

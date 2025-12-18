@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Repository.Data;
+using WebAppServer.Services;
 
 namespace WebAppServer.Pages.Courses
 {
@@ -11,10 +12,12 @@ namespace WebAppServer.Pages.Courses
     public class EditModel : PageModel
     {
         private readonly AppDbContext _db;
+        private readonly ICourseReportService _courseReportService;
 
-        public EditModel(AppDbContext db)
+        public EditModel(AppDbContext db, ICourseReportService courseReportService)
         {
             _db = db;
+            _courseReportService = courseReportService;
         }
 
         [BindProperty]
@@ -134,6 +137,46 @@ namespace WebAppServer.Pages.Courses
             _db.Courses.Remove(course);
             await _db.SaveChangesAsync();
             return RedirectToPage("/Courses");
+        }
+
+        public async System.Threading.Tasks.Task<IActionResult> OnPostDownloadReportAsync(int id, string format)
+        {
+            var course = await _db.Courses
+                .Include(c => c.Avtors)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (course == null)
+            {
+                return NotFound();
+            }
+
+            var login = User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(login))
+            {
+                return Unauthorized();
+            }
+
+            if (!course.Avtors.Any(a => a.Login == login))
+            {
+                return Forbid();
+            }
+
+            var requestedFormat = string.Equals(format, "excel", StringComparison.OrdinalIgnoreCase)
+                ? CourseReportFormat.Excel
+                : CourseReportFormat.Pdf;
+
+            var report = await _courseReportService.GenerateCourseReportAsync(id, login, requestedFormat);
+            if (report.Status == CourseReportGenerationStatus.Forbidden)
+            {
+                return Forbid();
+            }
+
+            if (report.Status == CourseReportGenerationStatus.NotFound || report.File == null)
+            {
+                return NotFound();
+            }
+
+            return File(report.File.Content, report.File.ContentType, report.File.FileName);
         }
     }
 }
