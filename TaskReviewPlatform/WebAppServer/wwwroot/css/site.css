@@ -39,11 +39,12 @@ body.app-body {
   flex: 1 0 auto;
   width: 100%;
   display: flex;
-  padding-bottom: 3rem;
+  padding-bottom: 6rem;
 }
 
 .app-main .app-container {
   flex: 1 1 auto;
+  padding-bottom: 2rem;
 }
 
 .app-header {
