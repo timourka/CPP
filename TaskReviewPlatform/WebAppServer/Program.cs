@@ -27,6 +27,7 @@ builder.Services.AddScoped<IRepository<User>, Repository<User>>();
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ICourseReportService, CourseReportService>();
 
 var app = builder.Build();
 
