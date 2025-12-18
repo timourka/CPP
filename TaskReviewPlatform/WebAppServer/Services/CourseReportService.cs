@@ -282,7 +282,12 @@ namespace WebAppServer.Services
 
         private static IContainer CellHeader(IContainer container)
         {
-            return container.Padding(3).Background(Colors.Grey.Lighten2).BorderBottom(1).BorderColor(Colors.Grey.Medium).TextStyle(TextStyle.Default.SemiBold());
+            container.DefaultTextStyle(TextStyle.Default.SemiBold());
+            return container
+                .Padding(3)
+                .Background(Colors.Grey.Lighten2)
+                .BorderBottom(1)
+                .BorderColor(Colors.Grey.Medium);
         }
 
         private static IContainer CellContent(IContainer container)
