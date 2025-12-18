@@ -14,10 +14,6 @@
         </div>
         <div class="answer-meta">
             <span class="badge-soft info">Курс: @Model.Task?.Course?.Name</span>
-            @if (Model.Task?.Deadline != null)
-            {
-                <span class="badge-soft warning">Дедлайн: @Model.Task.Deadline?.ToString("d")</span>
-            }
         </div>
     </div>
 </section>
