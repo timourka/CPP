@@ -5,133 +5,169 @@
     ViewData["Title"] = "Ответы на задание: " + Model.Task?.Name;
 }
 
-<h2>@Model.Task?.Name</h2>
-<p>@Model.Task?.Description</p>
+<section class="surface-card mb-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start">
+        <div>
+            <p class="text-uppercase text-muted mb-1 small">Задание</p>
+            <h2 class="mb-1">@Model.Task?.Name</h2>
+            <p class="muted mb-0">@Model.Task?.Description</p>
+        </div>
+        <div class="answer-meta">
+            <span class="badge-soft info">Курс: @Model.Task?.Course?.Name</span>
+            @if (Model.Task?.Deadline != null)
+            {
+                <span class="badge-soft warning">Дедлайн: @Model.Task.Deadline?.ToString("d")</span>
+            }
+        </div>
+    </div>
+</section>
 
-<hr />
-
-<h4>Мои ответы</h4>
+<div class="section-header">
+    <h4 class="mb-0">Мои ответы</h4>
+    @if (Model.UserAnswers.Count > 0)
+    {
+        <span class="text-muted small">@Model.UserAnswers.Count ответ(а)</span>
+    }
+</div>
 
 @if (Model.UserAnswers.Count == 0)
 {
-    <p class="text-muted">Вы еще не создали ответ.</p>
+    <div class="surface-card mb-3">
+        <p class="mb-0 text-muted">Вы ещё не создали ответ. Используйте форму ниже, чтобы прикрепить файлы и описание.</p>
+    </div>
 }
 else
 {
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Описание</th>
-                <th>Файлы</th>
-                <th>Статус</th>
-                <th>Оценка</th>
-                <th>Комментарии ревью</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var a in Model.UserAnswers)
-            {
-                var canModify = a.Status != "Проверено" || a.AllowResubmit;
-                <tr>
-                    <td>@a.Text</td>
-                    <td>
-                        @if (a.Files?.Count > 0)
-                        {
-                            <ul class="mb-0">
-                                @foreach (var file in a.Files)
-                                {
-                                    <li><a href="@file.RelativePath" target="_blank">@file.FileName</a></li>
-                                }
-                            </ul>
-                        }
-                        else if (!string.IsNullOrEmpty(a.FilePath))
-                        {
-                            <a href="@a.FilePath" target="_blank">@(string.IsNullOrEmpty(a.FileName) ? "Скачать файл" : a.FileName)</a>
-                        }
-                        else
-                        {
-                            <span class="text-muted">Файлы не прикреплены</span>
-                        }
-                    </td>
-                    <td>
-                        @a.Status
-                        @if (a.ReviewRequested)
-                        {
-                            <span class="badge bg-info ms-2">Запрошено ревью</span>
-                        }
-                    </td>
-                    <td>@((a.Grade >= 0) ? a.Grade : "-")</td>
-                    <td>
-                        @if (Model.ReviewComments.TryGetValue(a.Id, out var comments) && comments.Count > 0)
-                        {
-                            <ul class="mb-0">
-                                @foreach (var comment in comments.Take(3))
-                                {
-                                    <li>
-                                        <strong>@(comment.LineNumber.HasValue ? $"Строка {comment.LineNumber}" : "Общее замечание"):</strong>
-                                        <span>@comment.Text</span>
-                                    </li>
-                                }
-                            </ul>
+    @foreach (var a in Model.UserAnswers)
+    {
+        var canModify = a.Status != "Проверено" || a.AllowResubmit;
+        var editId = $"edit-{a.Id}";
+        <div class="surface-card answer-card">
+            <div class="answer-meta">
+                <span class="badge-soft @((a.Status == "Проверено") ? "success" : "info")">Статус: @a.Status</span>
+                @if (a.ReviewRequested)
+                {
+                    <span class="badge-soft warning">Запрошено ревью</span>
+                }
+                <span class="badge-soft @(a.Grade >= 0 ? "success" : "muted")">Оценка: @((a.Grade >= 0) ? a.Grade : "-")</span>
+                @if (!canModify)
+                {
+                    <span class="badge-soft muted">Повторная отправка закрыта</span>
+                }
+            </div>
 
-                            @if (comments.Count > 3)
+            <div>
+                <div class="fw-semibold mb-1">Описание</div>
+                <p class="mb-2">@a.Text</p>
+                <div class="fw-semibold mb-1">Файлы</div>
+                @if (a.Files?.Count > 0)
+                {
+                    <ul class="file-list">
+                        @foreach (var file in a.Files)
+                        {
+                            <li><a href="@file.RelativePath" target="_blank">@file.FileName</a></li>
+                        }
+                    </ul>
+                }
+                else if (!string.IsNullOrEmpty(a.FilePath))
+                {
+                    <a href="@a.FilePath" target="_blank">@(string.IsNullOrEmpty(a.FileName) ? "Скачать файл" : a.FileName)</a>
+                }
+                else
+                {
+                    <span class="text-muted">Файлы не прикреплены</span>
+                }
+            </div>
+
+            <div>
+                <div class="fw-semibold mb-1">Комментарии ревью</div>
+                @if (Model.ReviewComments.TryGetValue(a.Id, out var comments) && comments.Count > 0)
+                {
+                    <div class="app-surface-muted">
+                        <ul class="mb-0">
+                            @foreach (var comment in comments.Take(3))
                             {
-                                <div class="text-muted">И ещё @(comments.Count - 3) комментариев</div>
+                                <li>
+                                    <strong>@(comment.LineNumber.HasValue ? $"Строка {comment.LineNumber}" : "Общее замечание"):</strong>
+                                    <span>@comment.Text</span>
+                                </li>
                             }
-                        }
-                        else
+                        </ul>
+                        @if (comments.Count > 3)
                         {
-                            <span class="text-muted">Нет комментариев</span>
+                            <div class="text-muted small mt-1">И ещё @(comments.Count - 3) комментариев</div>
                         }
-                    </td>
-                    <td>
-                        @if (canModify)
-                        {
-                            <form method="post" asp-page-handler="Delete" class="d-inline">
-                                <input type="hidden" name="answerId" value="@a.Id" />
-                                <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить ответ?');">Удалить</button>
-                            </form>
+                    </div>
+                }
+                else
+                {
+                    <span class="text-muted">Нет комментариев</span>
+                }
+            </div>
 
-                            <form method="post" asp-page-handler="Edit" class="d-inline" enctype="multipart/form-data">
-                                <input type="hidden" name="answerId" value="@a.Id" />
-                                <input type="text" name="newText" class="form-control d-inline w-auto" placeholder="Новый текст" />
-                                <input type="file" name="newFiles" class="form-control d-inline w-auto" multiple />
-                                <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions). Добавьте один или несколько файлов для замены текущих вложений.</div>
-                                <button class="btn btn-sm btn-warning">Редактировать</button>
-                            </form>
+            <div class="answer-actions">
+                @if (canModify)
+                {
+                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#@editId">Редактировать</button>
 
-                            @if (!a.ReviewRequested)
-                            {
-                                <form method="post" asp-page-handler="RequestReview" class="d-inline ms-1">
-                                    <input type="hidden" name="answerId" value="@a.Id" />
-                                    <button class="btn btn-sm btn-primary">Запросить ревью</button>
-                                </form>
-                            }
-                        }
-                        else
-                        {
-                            <span class="text-muted">Повторная отправка не разрешена</span>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    @if (!a.ReviewRequested)
+                    {
+                        <form method="post" asp-page-handler="RequestReview" class="d-inline">
+                            <input type="hidden" name="answerId" value="@a.Id" />
+                            <button class="btn btn-outline-primary">Запросить ревью</button>
+                        </form>
+                    }
+
+                    <form method="post" asp-page-handler="Delete" class="d-inline" onsubmit="return confirm('Удалить ответ?');">
+                        <input type="hidden" name="answerId" value="@a.Id" />
+                        <button class="btn btn-outline-danger">Удалить</button>
+                    </form>
+                }
+                else
+                {
+                    <span class="text-muted">Повторная отправка не разрешена</span>
+                }
+            </div>
+
+            <div class="collapse" id="@editId">
+                <div class="answer-edit mt-2">
+                    <form method="post" asp-page-handler="Edit" enctype="multipart/form-data">
+                        <input type="hidden" name="answerId" value="@a.Id" />
+                        <div class="mb-2">
+                            <label class="form-label">Новый текст</label>
+                            <textarea name="newText" class="form-control" placeholder="Уточните детали решения или добавьте пояснения"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Новые файлы</label>
+                            <input type="file" name="newFiles" class="form-control" multiple />
+                            <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions). Добавьте файлы, чтобы заменить текущие вложения.</div>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Сохранить изменения</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
 }
 
-<hr />
+<div class="section-header mt-4">
+    <h4 class="mb-0">Создать новый ответ</h4>
+    <span class="text-muted small">Отправьте описание и файлы для текущего задания</span>
+</div>
 
-<h4>Создать новый ответ</h4>
-<form method="post" asp-page-handler="Create" enctype="multipart/form-data">
-    <div class="mb-3">
-        <label class="form-label">Описание</label>
-        <textarea asp-for="NewAnswerText" class="form-control" placeholder="Опишите решение"></textarea>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Файлы</label>
-        <input type="file" asp-for="NewAnswerFiles" class="form-control" multiple />
-        <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions). Можно прикрепить несколько файлов.</div>
-    </div>
-    <button class="btn btn-primary" type="submit">Создать</button>
-</form>
+<div class="surface-card">
+    <form method="post" asp-page-handler="Create" enctype="multipart/form-data" class="d-grid gap-3">
+        <div>
+            <label class="form-label">Описание</label>
+            <textarea asp-for="NewAnswerText" class="form-control" placeholder="Опишите своё решение, перечислите ключевые шаги и особенности"></textarea>
+        </div>
+        <div>
+            <label class="form-label">Файлы</label>
+            <input type="file" asp-for="NewAnswerFiles" class="form-control" multiple />
+            <div class="form-text">Поддерживаемые форматы: @string.Join(", ", Model.MonacoSupportedExtensions). Можно прикрепить несколько файлов.</div>
+        </div>
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-primary" type="submit">Создать</button>
+        </div>
+    </form>
+</div>
