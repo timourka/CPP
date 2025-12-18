@@ -49,9 +49,9 @@
                     }
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button class="btn btn-primary flex-grow-1" type="submit">Применить</button>
-                <a class="btn btn-outline-secondary" asp-page="/Tasks/Edit" asp-route-id="@Model.Task.Id">Сбросить</a>
+            <div class="col-12 col-md-2 d-flex flex-md-row flex-column gap-2">
+                <button class="btn btn-primary w-100" type="submit">Применить</button>
+                <a class="btn btn-outline-secondary w-100" asp-page="/Tasks/Edit" asp-route-id="@Model.Task.Id">Сбросить</a>
             </div>
         </form>
     </div>
