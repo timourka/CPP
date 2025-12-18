@@ -21,9 +21,45 @@
 <hr />
 
 <h4>Ответы студентов</h4>
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="id" value="@Model.Task.Id" />
+            <div class="col-md-4">
+                <label asp-for="SearchQuery" class="form-label">Поиск</label>
+                <input asp-for="SearchQuery" class="form-control" placeholder="Поиск по описанию или студенту" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="StudentFilter" class="form-label">Студент</label>
+                <select asp-for="StudentFilter" class="form-select">
+                    <option value="">Все</option>
+                    @foreach (var login in Model.StudentOptions)
+                    {
+                        <option value="@login">@login</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="StatusFilter" class="form-label">Статус</label>
+                <select asp-for="StatusFilter" class="form-select">
+                    <option value="">Все</option>
+                    @foreach (var status in Model.StatusOptions)
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button class="btn btn-primary flex-grow-1" type="submit">Применить</button>
+                <a class="btn btn-outline-secondary" asp-page="/Tasks/Edit" asp-route-id="@Model.Task.Id">Сбросить</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 @if (Model.Answers.Count == 0)
 {
-    <p class="text-muted">Ответов ещё нет.</p>
+    <p class="text-muted">Ответов не найдено по заданным условиям.</p>
 }
 else
 {

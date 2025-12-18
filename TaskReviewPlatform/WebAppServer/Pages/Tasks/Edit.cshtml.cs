@@ -23,8 +23,19 @@ namespace WebAppServer.Pages.Tasks
         [BindProperty]
         public Models.Models.Task Task { get; set; } = new();
 
+        [BindProperty(SupportsGet = true)]
+        public string SearchQuery { get; set; } = string.Empty;
+
+        [BindProperty(SupportsGet = true)]
+        public string? StudentFilter { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? StatusFilter { get; set; }
+
         public List<Answer> Answers { get; set; } = new();
         public Dictionary<int, int> ReviewCommentsCount { get; set; } = new();
+        public List<string> StudentOptions { get; set; } = new();
+        public List<string> StatusOptions { get; set; } = new();
 
         public async System.Threading.Tasks.Task<IActionResult> OnGetAsync(int id)
         {
@@ -40,10 +51,49 @@ namespace WebAppServer.Pages.Tasks
             if (!Task.Course!.Avtors.Any(a => a.Login == login))
                 return Forbid();
 
-            Answers = await _db.Answers
+            SearchQuery = SearchQuery?.Trim() ?? string.Empty;
+            StudentFilter = string.IsNullOrWhiteSpace(StudentFilter) ? null : StudentFilter.Trim();
+            StatusFilter = string.IsNullOrWhiteSpace(StatusFilter) ? null : StatusFilter.Trim();
+
+            var answersQuery = _db.Answers
                 .Include(a => a.Student)
                 .Include(a => a.Files)
-                .Where(a => a.Task!.Id == id)
+                .Where(a => a.Task!.Id == id);
+
+            StudentOptions = await answersQuery
+                .Where(a => a.Student != null)
+                .Select(a => a.Student!.Login)
+                .Distinct()
+                .OrderBy(l => l)
+                .ToListAsync();
+
+            StatusOptions = await answersQuery
+                .Select(a => a.Status)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
+
+            if (!string.IsNullOrWhiteSpace(StudentFilter))
+            {
+                answersQuery = answersQuery.Where(a => a.Student != null && a.Student.Login == StudentFilter);
+            }
+
+            if (!string.IsNullOrWhiteSpace(StatusFilter))
+            {
+                answersQuery = answersQuery.Where(a => a.Status == StatusFilter);
+            }
+
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var pattern = $"%{SearchQuery}%";
+                answersQuery = answersQuery.Where(a =>
+                    EF.Functions.Like(a.Text ?? string.Empty, pattern) ||
+                    EF.Functions.Like(a.Student!.Login ?? string.Empty, pattern));
+            }
+
+            Answers = await answersQuery
+                .OrderBy(a => a.Student != null ? a.Student.Login : string.Empty)
+                .ThenBy(a => a.Id)
                 .ToListAsync();
 
             var ids = Answers.Select(a => a.Id).ToList();
