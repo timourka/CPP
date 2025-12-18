@@ -13,6 +13,7 @@
             <th>Login</th>
             <th>Имя</th>
             <th>Пароль</th>
+            <th>Email</th>
             <th>Действия</th>
         </tr>
     </thead>
@@ -24,6 +25,7 @@
                 <td>@user.Login</td>
                 <td>@user.Name</td>
                 <td>@user.Password</td>
+                <td>@user.Email</td>
                 <td>
                     <form method="get" asp-page-handler="" class="d-inline">
                         <input type="hidden" name="EditId" value="@user.Id" />
@@ -60,6 +62,11 @@
     <div class="mb-3">
         <label class="form-label">Пароль</label>
         <input asp-for="InputUser.Password" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Email для уведомлений</label>
+        <input asp-for="InputUser.Email" class="form-control" />
     </div>
 
     <button type="submit" class="btn btn-primary">@((Model.InputUser.Id == 0) ? "Создать" : "Сохранить")</button>

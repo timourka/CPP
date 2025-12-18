@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Repository.Data;
 using System.Linq;
+using WebAppServer.Services;
 
 namespace WebAppServer.Pages.Tasks
 {
@@ -12,7 +13,12 @@ namespace WebAppServer.Pages.Tasks
     public class EditModel : PageModel
     {
         private readonly AppDbContext _db;
-        public EditModel(AppDbContext db) => _db = db;
+        private readonly INotificationService _notificationService;
+        public EditModel(AppDbContext db, INotificationService notificationService)
+        {
+            _db = db;
+            _notificationService = notificationService;
+        }
 
         [BindProperty]
         public Models.Models.Task Task { get; set; } = new();
@@ -111,6 +117,7 @@ namespace WebAppServer.Pages.Tasks
                 r.Completed = true;
             }
             await _db.SaveChangesAsync();
+            await _notificationService.NotifyStatusChangeAsync(answer, answer.Status);
 
             return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });
         }
@@ -140,6 +147,7 @@ namespace WebAppServer.Pages.Tasks
                 r.Completed = false;
             }
             await _db.SaveChangesAsync();
+            await _notificationService.NotifyStatusChangeAsync(answer, answer.Status);
 
             return RedirectToPage("/Tasks/Edit", new { id = answer.Task.Id });
         }

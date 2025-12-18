@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Repository.Data;
 using Microsoft.AspNetCore.Hosting;
+using WebAppServer.Services;
 
 namespace WebAppServer.Pages.Tasks
 {
@@ -17,11 +18,13 @@ namespace WebAppServer.Pages.Tasks
     {
         private readonly AppDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private readonly INotificationService _notificationService;
 
-        public ReviewModel(AppDbContext db, IWebHostEnvironment env)
+        public ReviewModel(AppDbContext db, IWebHostEnvironment env, INotificationService notificationService)
         {
             _db = db;
             _env = env;
+            _notificationService = notificationService;
         }
 
         public Answer? Answer { get; set; }
@@ -160,6 +163,7 @@ namespace WebAppServer.Pages.Tasks
 
             _db.ReviewComments.Add(comment);
             await _db.SaveChangesAsync();
+            await _notificationService.NotifyReviewCommentAsync(Answer!, comment);
 
             return RedirectToPage(new { answerId, file = ActiveFilePath });
         }
@@ -189,6 +193,7 @@ namespace WebAppServer.Pages.Tasks
             }
 
             await _db.SaveChangesAsync();
+            await _notificationService.NotifyStatusChangeAsync(Answer, Answer.Status);
             return RedirectToPage(new { answerId });
         }
 
@@ -251,12 +256,19 @@ namespace WebAppServer.Pages.Tasks
 
             _db.ReviewRequests.Add(request);
 
+            var statusChanged = false;
             if (!Answer.ReviewRequested && Answer.Status != "Проверено")
             {
                 Answer.ReviewRequested = true;
                 Answer.Status = "Ожидает проверки";
+                statusChanged = true;
             }
             await _db.SaveChangesAsync();
+            await _notificationService.NotifyReviewerAssignmentAsync(request);
+            if (statusChanged)
+            {
+                await _notificationService.NotifyStatusChangeAsync(Answer, Answer.Status);
+            }
 
             return RedirectToPage(new { answerId });
         }

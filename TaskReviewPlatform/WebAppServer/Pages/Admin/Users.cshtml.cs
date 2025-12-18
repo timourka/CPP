@@ -61,6 +61,7 @@ namespace WebAppServer.Pages.Admin
                 user.Login = InputUser.Login;
                 user.Name = InputUser.Name;
                 user.Password = InputUser.Password;
+                user.Email = InputUser.Email;
             }
 
             await _db.SaveChangesAsync();
