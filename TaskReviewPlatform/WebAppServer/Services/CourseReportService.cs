@@ -261,16 +261,14 @@ namespace WebAppServer.Services
                         });
                     });
 
-                    page.Footer().Element(footer =>
-                    {
-                        footer.AlignCenter();
-                        footer.DefaultTextStyle(TextStyle.Default.FontSize(9).FontColor(Colors.Grey.Medium));
-                        footer.Text(x =>
+                    page.Footer()
+                        .AlignCenter()
+                        .DefaultTextStyle(TextStyle.Default.FontSize(9).FontColor(Colors.Grey.Medium))
+                        .Text(x =>
                         {
                             x.Span("Сформировано автоматически — ");
                             x.Span("TaskReviewPlatform").SemiBold();
                         });
-                    });
                 });
             }).GeneratePdf();
         }
