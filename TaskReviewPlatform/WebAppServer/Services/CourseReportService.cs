@@ -80,17 +80,17 @@ namespace WebAppServer.Services
 
             var answers = await _db.Answers
                 .Include(a => a.Task)!.ThenInclude(t => t!.Course)
-                .Where(a => a.Task!.Course!.Id == courseId)
+                .Where(a => a.Task != null && a.Task.Course != null && a.Task.Course.Id == courseId)
                 .ToListAsync();
 
             var reviewRequests = await _db.ReviewRequests
                 .Include(r => r.Answer)!.ThenInclude(a => a.Task)!.ThenInclude(t => t!.Course)
-                .Where(r => r.Answer!.Task!.Course!.Id == courseId)
+                .Where(r => r.Answer != null && r.Answer.Task != null && r.Answer.Task.Course != null && r.Answer.Task.Course.Id == courseId)
                 .ToListAsync();
 
             var reviewComments = await _db.ReviewComments
                 .Include(c => c.Answer)!.ThenInclude(a => a.Task)!.ThenInclude(t => t!.Course)
-                .Where(c => c.Answer!.Task!.Course!.Id == courseId)
+                .Where(c => c.Answer != null && c.Answer.Task != null && c.Answer.Task.Course != null && c.Answer.Task.Course.Id == courseId)
                 .ToListAsync();
 
             var taskReports = new List<TaskReportData>();
@@ -261,15 +261,17 @@ namespace WebAppServer.Services
                         });
                     });
 
-                    page.Footer()
-                        .AlignCenter()
-                        .Text(x =>
+                    page.Footer().Element(footer =>
+                    {
+                        footer.AlignCenter();
+                        footer.Text(x =>
                         {
                             x.Span("Сформировано автоматически — ");
                             x.Span("TaskReviewPlatform").SemiBold();
                         })
                         .FontSize(9)
                         .FontColor(Colors.Grey.Medium);
+                    });
                 });
             }).GeneratePdf();
         }
