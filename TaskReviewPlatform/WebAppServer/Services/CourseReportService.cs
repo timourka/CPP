@@ -231,16 +231,16 @@ namespace WebAppServer.Services
 
                             table.Header(header =>
                             {
-                                header.Cell().Element(CellHeader).Text("#");
-                                header.Cell().Element(CellHeader).Text("Задание");
-                                header.Cell().Element(CellHeader).Text("Ответов");
-                                header.Cell().Element(CellHeader).Text("Черновики");
-                                header.Cell().Element(CellHeader).Text("Ожидает проверки");
-                                header.Cell().Element(CellHeader).Text("Проверено");
-                                header.Cell().Element(CellHeader).Text("Запросы на ревью");
-                                header.Cell().Element(CellHeader).Text("Завершенные ревью");
-                                header.Cell().Element(CellHeader).Text("Комментариев");
-                                header.Cell().Element(CellHeader).Text("Средняя оценка");
+                                header.Cell().Element(CellHeader).Text("#").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Задание").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Ответов").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Черновики").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Ожидает проверки").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Проверено").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Запросы на ревью").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Завершенные ревью").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Комментариев").SemiBold();
+                                header.Cell().Element(CellHeader).Text("Средняя оценка").SemiBold();
                             });
 
                             var index = 1;
@@ -281,7 +281,6 @@ namespace WebAppServer.Services
 
         private static IContainer CellHeader(IContainer container)
         {
-            container.DefaultTextStyle(TextStyle.Default.SemiBold());
             return container
                 .Padding(3)
                 .Background(Colors.Grey.Lighten2)
